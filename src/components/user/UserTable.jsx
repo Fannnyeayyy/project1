@@ -23,7 +23,10 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
                 Role
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Aksi
+                Created At
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Action
               </th>
             </tr>
           </thead>
@@ -32,7 +35,7 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
           <tbody className="divide-y divide-gray-200">
             {users.length === 0 ? (
               <tr>
-                <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                   Tidak ada data user
                 </td>
               </tr>
@@ -89,6 +92,17 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
                     >
                       {user.role === "admin" ? "👑 Admin" : "👤 User"}
                     </span>
+                  </td>
+
+                  {/* Created At */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {new Date(user.createdAt).toLocaleDateString('id-ID', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </td>
 
                   {/* Aksi */}
