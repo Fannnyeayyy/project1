@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import indomaret from "../assets/Logo_Indomaret.png";
+import API_BASE_URL from "../constants/apiConfig";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -16,7 +17,7 @@ function Login() {
 
     try {
       // Ganti URL ini dengan URL API backend kamu
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,8 +33,7 @@ function Login() {
       if (response.ok) {
         // Login berhasil
         // Simpan token atau data user ke localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("token", data.token);
         
         // Redirect ke dashboard
         navigate("/dashboard");

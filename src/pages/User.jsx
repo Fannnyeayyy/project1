@@ -18,7 +18,7 @@ function User() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    role: "User",
+    role: "",
   });
   const navigate = useNavigate();
 
@@ -26,12 +26,13 @@ function User() {
   const ambilDataUsers = async () => {
     setLoading(true);
     try {
-      const data = await ambilSemuaUsers();
-      if (data.success) {
-        setUsers(data.data);
-      } else {
-        setError("Gagal mengambil data users");
-      }
+      const result = await ambilSemuaUsers();
+
+    if (result.success) {
+      setUsers(result.data);
+    } else {
+      setError(result.message);
+    }
     } catch (error) {
       setError("Terjadi kesalahan saat mengambil data");
     } finally {

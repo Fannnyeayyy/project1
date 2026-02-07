@@ -1,16 +1,42 @@
 import { API_ENDPOINTS } from "../constants/apiConfig";
 
+const BASE_URL = "http://localhost:3000/api/auth";
+
+const getToken = () => {
+  return sessionStorage.getItem("token");
+};
+
+const headers = () => ({
+  "Content-Type": "application/json",
+  "Authorization": "Bearer " + getToken()
+});
+
+
 // Ambil semua users
 export const ambilSemuaUsers = async () => {
   try {
-    const response = await fetch(API_ENDPOINTS.USERS);
-    const data = await response.json();
-    return data;
+    const res = await fetch(BASE_URL, {
+      method: "GET",
+      headers: headers()
+    });
+
+    if (!res.ok) throw new Error("Gagal mengambil users");
+
+    const data = await res.json();
+
+    return {
+      success: true,
+      data: data
+    };
+
   } catch (error) {
-    console.error("Error fetching users:", error);
-    throw error;
+    return {
+      success: false,
+      message: error.message
+    };
   }
 };
+
 
 // Tambah user baru
 export const tambahUser = async (userData) => {

@@ -91,8 +91,8 @@ function UserTable({ users, showPassword, onTogglePassword, onDelete }) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm text-gray-600">
-                    {user.created_at
-                      ? new Date(user.created_at).toLocaleDateString("id-ID")
+                    {user.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString("id-ID")
                       : "-"}
                   </span>
                 </td>
