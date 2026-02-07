@@ -3,7 +3,9 @@ import { useNavigate } from "react-router";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import FormTambahUser from "../models/FormTambahUser";
-import FormEditUser from "../models/Formedituser";
+import FormEditUser from "../models/FormEditUser";
+import DeleteConfirmation from "../components/DeleteConfirmation";
+import Toast from "../components/Toast";
 import UserTable from "../components/user/UserTable";
 import SearchBar from "../components/user/SearchBar";
 import { 
@@ -19,9 +21,18 @@ function User() {
   const [showPassword, setShowPassword] = useState({});
   const [formUserVisible, setFormUserVisible] = useState(false);
   const [formEditVisible, setFormEditVisible] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Toast state
+  const [toast, setToast] = useState({
+    isOpen: false,
+    type: "success",
+    message: ""
+  });
   
   // Form data untuk tambah user
   const [formData, setFormData] = useState({
@@ -39,6 +50,23 @@ function User() {
   });
 
   const navigate = useNavigate();
+
+  // ========== TOAST HELPER ==========
+
+  const showToast = (type, message) => {
+    setToast({
+      isOpen: true,
+      type,
+      message
+    });
+  };
+
+  const closeToast = () => {
+    setToast({
+      ...toast,
+      isOpen: false
+    });
+  };
 
   // ========== DATA FETCHING ==========
 
@@ -118,12 +146,12 @@ function User() {
       if (data.success) {
         ambilDataUsers();
         tutupFormUser();
-        alert("User berhasil ditambahkan!");
+        showToast("success", "User berhasil ditambahkan!");
       } else {
-        alert(data.message || "Gagal menambahkan user");
+        showToast("error", data.message || "Gagal menambahkan user");
       }
     } catch (error) {
-      alert("Terjadi kesalahan saat menambahkan user");
+      showToast("error", "Terjadi kesalahan saat menambahkan user");
     } finally {
       setLoading(false);
     }
@@ -180,12 +208,12 @@ function User() {
       if (result.success) {
         ambilDataUsers();
         tutupFormEdit();
-        alert("User berhasil diupdate!");
+        showToast("success", "User berhasil diupdate!");
       } else {
-        alert(result.message || "Gagal mengupdate user");
+        showToast("error", result.message || "Gagal mengupdate user");
       }
     } catch (error) {
-      alert("Terjadi kesalahan saat mengupdate user");
+      showToast("error", "Terjadi kesalahan saat mengupdate user");
     } finally {
       setLoading(false);
     }
@@ -193,21 +221,34 @@ function User() {
 
   // ========== HAPUS USER ==========
 
-  // Hapus user
-  const hapusUserById = async (userId) => {
-    if (!confirm("Yakin ingin menghapus user ini?")) return;
+  // Buka delete confirmation modal
+  const openDeleteModal = (userId) => {
+    setUserToDelete(userId);
+    setDeleteModalOpen(true);
+  };
+
+  // Tutup delete confirmation modal
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  // Confirm delete user
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
 
     setLoading(true);
     try {
-      const data = await hapusUser(userId);
+      const data = await hapusUser(userToDelete);
       if (data.success) {
         ambilDataUsers();
-        alert("User berhasil dihapus!");
+        closeDeleteModal();
+        showToast("success", "User berhasil dihapus!");
       } else {
-        alert(data.message || "Gagal menghapus user");
+        showToast("error", data.message || "Gagal menghapus user");
       }
     } catch (error) {
-      alert("Terjadi kesalahan saat menghapus user");
+      showToast("error", "Terjadi kesalahan saat menghapus user");
     } finally {
       setLoading(false);
     }
@@ -262,7 +303,7 @@ function User() {
               showPassword={showPassword}
               onTogglePassword={toggleLihatPassword}
               onEdit={bukaFormEdit}
-              onDelete={hapusUserById}
+              onDelete={openDeleteModal}
             />
           )}
         </main>
@@ -284,6 +325,22 @@ function User() {
         formData={editFormData}
         onInputChange={handleEditInputChange}
         onSubmit={simpanEditUser}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isOpen={toast.isOpen}
+        onClose={closeToast}
+        type={toast.type}
+        message={toast.message}
+        duration={3000}
       />
     </div>
   );

@@ -4,37 +4,29 @@ import { X } from "lucide-react";
 function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
   if (!isOpen) return null;
 
-  // Handle click outside modal to close
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-      onClick={handleOverlayClick}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative transform transition-all scale-100">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition z-10"
-        >
-          <X size={28} />
-        </button>
-
-        {/* Modal Header */}
-        <div className="p-8 border-b border-gray-200">
-          <h2 className="text-3xl font-bold text-gray-800">Edit User</h2>
-          <p className="text-gray-500 text-base mt-2">
-            Isi formulir untuk mengubah data user.
-          </p>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8">
+        {/* Header */}
+        <div className="mb-8 border-b border-gray-200 pb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">Edit User</h2>
+              <p className="text-gray-500 text-base mt-2">
+                Isi formulir untuk mengubah data user.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition"
+            >
+              <X size={28} />
+            </button>
+          </div>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={onSubmit} className="p-8 space-y-6">
+        {/* Form */}
+        <form onSubmit={onSubmit} className="space-y-6">
           {/* Username */}
           <div>
             <label className="block text-base font-medium text-gray-700 mb-2">
@@ -86,11 +78,18 @@ function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
             </select>
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-3">
+          {/* Buttons */}
+          <div className="flex gap-4 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-3.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-base transition"
+            >
+              Batal
+            </button>
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 text-base rounded-lg transition shadow-md hover:shadow-lg"
+              className="flex-1 px-4 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg text-base"
             >
               Simpan User
             </button>
