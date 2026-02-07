@@ -33,7 +33,7 @@ function Login() {
       if (response.ok) {
         // Login berhasil
         // Simpan token atau data user ke localStorage
-        sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("token", data.token);
         
         // Redirect ke dashboard
         navigate("/dashboard");
@@ -113,7 +113,7 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold py-3.5 rounded-xl hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-linear-to-r from-indigo-600 to-blue-600 text-white font-semibold py-3.5 rounded-xl hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? "Loading..." : "Login"}
             </button>

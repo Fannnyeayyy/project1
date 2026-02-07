@@ -11,8 +11,8 @@ const headers = () => ({
   "Authorization": "Bearer " + getToken()
 });
 
+// ========== GET ALL USERS ==========
 
-// Ambil semua users
 export const ambilSemuaUsers = async () => {
   try {
     const res = await fetch(BASE_URL, {
@@ -37,36 +37,99 @@ export const ambilSemuaUsers = async () => {
   }
 };
 
+// ========== TAMBAH USER (REGISTER) ==========
 
-// Tambah user baru
 export const tambahUser = async (userData) => {
   try {
-    const response = await fetch(API_ENDPOINTS.USERS, {
+    const response = await fetch(`${BASE_URL}/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
     });
+    
     const data = await response.json();
-    return data;
+    
+    if (response.ok) {
+      return {
+        success: true,
+        message: data.message || "User berhasil ditambahkan"
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || "Gagal menambahkan user"
+      };
+    }
   } catch (error) {
     console.error("Error adding user:", error);
-    throw error;
+    return {
+      success: false,
+      message: error.message || "Terjadi kesalahan"
+    };
   }
 };
 
-// Hapus user
+// ========== EDIT USER ==========
+
+export const editUser = async (userId, userData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/${userId}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify(userData),
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      return {
+        success: true,
+        message: data.message || "User berhasil diupdate"
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || "Gagal mengupdate user"
+      };
+    }
+  } catch (error) {
+    console.error("Error editing user:", error);
+    return {
+      success: false,
+      message: error.message || "Terjadi kesalahan"
+    };
+  }
+};
+
+// ========== HAPUS USER ==========
+
 export const hapusUser = async (userId) => {
   try {
-    const response = await fetch(API_ENDPOINTS.USER_BY_ID(userId), {
+    const response = await fetch(`${BASE_URL}/${userId}`, {
       method: "DELETE",
+      headers: headers()
     });
+    
     const data = await response.json();
-    return data;
+    
+    if (response.ok) {
+      return {
+        success: true,
+        message: "User berhasil dihapus"
+      };
+    } else {
+      return {
+        success: false,
+        message: data.message || "Gagal menghapus user"
+      };
+    }
   } catch (error) {
     console.error("Error deleting user:", error);
-    throw error;
+    return {
+      success: false,
+      message: error.message || "Terjadi kesalahan"
+    };
   }
 };
-

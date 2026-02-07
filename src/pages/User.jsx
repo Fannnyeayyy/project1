@@ -3,36 +3,55 @@ import { useNavigate } from "react-router";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import FormTambahUser from "../models/FormTambahUser";
+import FormEditUser from "../models/Formedituser";
 import UserTable from "../components/user/UserTable";
 import SearchBar from "../components/user/SearchBar";
-import { ambilSemuaUsers, tambahUser, hapusUser } from "../services/userService";
+import { 
+  ambilSemuaUsers, 
+  tambahUser, 
+  editUser, 
+  hapusUser 
+} from "../services/userService";
 
 function User() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showPassword, setShowPassword] = useState({});
   const [formUserVisible, setFormUserVisible] = useState(false);
+  const [formEditVisible, setFormEditVisible] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Form data untuk tambah user
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    role: "",
+    role: "user",
   });
+
+  // Form data untuk edit user
+  const [editFormData, setEditFormData] = useState({
+    id: null,
+    username: "",
+    password: "",
+    role: "user",
+  });
+
   const navigate = useNavigate();
+
+  // ========== DATA FETCHING ==========
 
   // Ambil data users dari database
   const ambilDataUsers = async () => {
     setLoading(true);
     try {
       const result = await ambilSemuaUsers();
-
-    if (result.success) {
-      setUsers(result.data);
-    } else {
-      setError(result.message);
-    }
+      if (result.success) {
+        setUsers(result.data);
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       setError("Terjadi kesalahan saat mengambil data");
     } finally {
@@ -52,6 +71,8 @@ function User() {
       user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ========== HELPER FUNCTIONS ==========
+
   // Fungsi logout
   const handleLogout = () => navigate("/login");
 
@@ -63,6 +84,8 @@ function User() {
     }));
   };
 
+  // ========== TAMBAH USER ==========
+  
   // Buka form tambah user
   const bukaFormUser = () => setFormUserVisible(true);
 
@@ -72,11 +95,11 @@ function User() {
     setFormData({
       username: "",
       password: "",
-      role: "User",
+      role: "user",
     });
   };
 
-  // Handle perubahan input form
+  // Handle perubahan input form tambah
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -93,8 +116,8 @@ function User() {
     try {
       const data = await tambahUser(formData);
       if (data.success) {
-        ambilDataUsers(); // Refresh data
-        tutupFormUser();  // Tutup form
+        ambilDataUsers();
+        tutupFormUser();
         alert("User berhasil ditambahkan!");
       } else {
         alert(data.message || "Gagal menambahkan user");
@@ -106,6 +129,70 @@ function User() {
     }
   };
 
+  // ========== EDIT USER ==========
+
+  // Buka form edit user
+  const bukaFormEdit = (user) => {
+    setEditFormData({
+      id: user.id,
+      username: user.username,
+      password: "",
+      role: user.role,
+    });
+    setFormEditVisible(true);
+  };
+
+  // Tutup form edit user
+  const tutupFormEdit = () => {
+    setFormEditVisible(false);
+    setEditFormData({
+      id: null,
+      username: "",
+      password: "",
+      role: "user",
+    });
+  };
+
+  // Handle perubahan input form edit
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Submit form edit user
+  const simpanEditUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { id, username, password, role } = editFormData;
+      
+      const dataToSend = { username, role };
+      if (password && password.trim() !== "") {
+        dataToSend.password = password;
+      }
+
+      const result = await editUser(id, dataToSend);
+      
+      if (result.success) {
+        ambilDataUsers();
+        tutupFormEdit();
+        alert("User berhasil diupdate!");
+      } else {
+        alert(result.message || "Gagal mengupdate user");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan saat mengupdate user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========== HAPUS USER ==========
+
   // Hapus user
   const hapusUserById = async (userId) => {
     if (!confirm("Yakin ingin menghapus user ini?")) return;
@@ -114,7 +201,7 @@ function User() {
     try {
       const data = await hapusUser(userId);
       if (data.success) {
-        ambilDataUsers(); // Refresh data
+        ambilDataUsers();
         alert("User berhasil dihapus!");
       } else {
         alert(data.message || "Gagal menghapus user");
@@ -125,6 +212,8 @@ function User() {
       setLoading(false);
     }
   };
+
+  // ========== RENDER ==========
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -172,6 +261,7 @@ function User() {
               users={filteredUsers}
               showPassword={showPassword}
               onTogglePassword={toggleLihatPassword}
+              onEdit={bukaFormEdit}
               onDelete={hapusUserById}
             />
           )}
@@ -185,6 +275,15 @@ function User() {
         formData={formData}
         onInputChange={handleInputChange}
         onSubmit={simpanUser}
+      />
+
+      {/* Form Edit User */}
+      <FormEditUser
+        isOpen={formEditVisible}
+        onClose={tutupFormEdit}
+        formData={editFormData}
+        onInputChange={handleEditInputChange}
+        onSubmit={simpanEditUser}
       />
     </div>
   );

@@ -12,4 +12,7 @@ router.post('/login', controller.login);
 router.get('/', authMiddleware, controller.getAllUsers);
 router.get('/:id', authMiddleware, adminMiddleware, controller.getUserById);
 
+// DELETE, UPDATE Route - 
+router.delete('/:id', authMiddleware, controller.deleteUser);
+router.put('/:id', authMiddleware, controller.updateUser);
 module.exports = router;

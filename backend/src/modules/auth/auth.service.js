@@ -34,9 +34,25 @@ const getUserById = async (id) => {
   return user;
 };
 
+const deleteUser = async (id) => {
+  const user = await repo.findById(id);
+  if (!user) throw new Error('User not found');
+  
+  await repo.deleteUser(id);
+  return { message: 'User deleted successfully' };
+};
+
+const updateUser = async (id, username, password, role) => {
+  const user = await repo.updateUser(id, username, password, role);
+  if (!user) throw new Error('User not found');
+  return user;
+};
+
 module.exports = {
   register,
   login,
   getAllUsers,
-  getUserById
+  getUserById,
+  deleteUser,
+  updateUser
 };

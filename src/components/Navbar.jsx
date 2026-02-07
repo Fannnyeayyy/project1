@@ -16,7 +16,7 @@ function Navbar({ onLogout }) {
               <p className="text-sm font-medium text-gray-800">Admin</p>
               <p className="text-xs text-gray-500">Administrator</p>
             </div>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
               A
             </div>
           </div>

@@ -39,4 +39,30 @@ const getUserById = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getAllUsers, getUserById};
+const deleteUser = async (req, res) => {
+  try {
+    await service.deleteUser(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    const user = await service.updateUser(req.params.id, username, password, role);
+    res.json({ message: 'User updated successfully', user });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+module.exports = { 
+  register, 
+  login, 
+  getAllUsers, 
+  getUserById, 
+  deleteUser,
+  updateUser
+};
