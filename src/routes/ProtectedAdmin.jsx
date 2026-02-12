@@ -2,7 +2,9 @@ import { Navigate, Outlet } from "react-router";
 
 export default function ProtectedAdmin() {
   const token = localStorage.getItem("token");
-  const admin = JSON.parse(localStorage.getItem("user"))?.role === "admin";
+  const admin =
+    (JSON.parse(localStorage.getItem("user"))?.role || "").toLowerCase() ===
+    "admin";
 
   if (!token) {
     return <Navigate to="/login" replace />;
