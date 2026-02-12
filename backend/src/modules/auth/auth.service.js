@@ -5,9 +5,6 @@ const { generateToken } = require('../../utils/jwt');
 const register = async (username, password, role = 'user') => {
   const exist = await repo.findByUsername(username);
   if (exist) throw new Error('Username already exists');
-
-  // const hashed = await bcrypt.hash(password, 10);
-  // return repo.createUser(username, hashed, role);
   return repo.createUser(username, password, role);
 };
 
@@ -15,13 +12,20 @@ const login = async (username, password) => {
   const user = await repo.findByUsername(username);
   if (!user) throw new Error('User not found');
 
-  // const valid = await bcrypt.compare(password, user.password);
-  // if (!valid) throw new Error('Wrong password');
-
-  return generateToken({
+  const access_token = generateToken({
     id: user.id,
-    username: user.username
+    username: user.username,
+    role: user.role
   });
+
+  return {
+    access_token,
+    user: {
+      id: user.id,
+      name: user.username,
+      role: user.role
+    }
+  }
 };
 
 const getAllUsers = async () => {

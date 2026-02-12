@@ -14,8 +14,13 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
     console.log(username, password);
-    const token = await service.login(username, password);
-    res.json({ token });
+    const result = await service.login(username, password);
+    
+    res.status(200).json({
+      access_token: result.access_token,
+      token_type: "bearer",
+      user: result.user
+    });
   } catch (err) {
     res.status(401).json({ message: err.message });
   }

@@ -33,7 +33,8 @@ function Login() {
       if (response.ok) {
         // Login berhasil
         // Simpan token atau data user ke localStorage
-      sessionStorage.setItem("token", data.token);
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
         
         // Redirect ke dashboard
         navigate("/dashboard");
