@@ -1,9 +1,7 @@
-import { API_ENDPOINTS } from "../constants/apiConfig";
-
 const BASE_URL = "http://localhost:3000/api/auth";
 
 const getToken = () => {
-  return sessionStorage.getItem("token");
+  return localStorage.getItem("token");
 };
 
 const headers = () => ({
