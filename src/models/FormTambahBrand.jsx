@@ -42,8 +42,8 @@ function FormTambahBrand({ isOpen, onClose, formData, onInputChange, onSubmit })
             </label>
             <input
               type="text"
-              name="brandName"
-              value={formData.brandName}
+              name="name"
+              value={formData.name}
               onChange={onInputChange}
               required
               className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"

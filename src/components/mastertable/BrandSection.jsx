@@ -2,20 +2,15 @@ import React, { useState } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import FormTambahBrand from "../../models/Formtambahbrand";
 import DeleteConfirmation from "../DeleteConfirmation";
+import axios from "axios";
 
-function BrandSection() {
+function BrandSection({ dataBrand, call }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState(null);
   const [formData, setFormData] = useState({
-    brandName: "",
+    name: "",
   });
-
-  // Dummy data brands
-  const [brands, setBrands] = useState([
-    { id: 1, brandName: "NIVEA" },
-    { id: 2, brandName: "HANSAPLAST" },
-  ]);
 
   // Open modal
   const openModal = () => {
@@ -25,7 +20,7 @@ function BrandSection() {
   // Close modal
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormData({ brandName: "" });
+    setFormData({ name: "" });
   };
 
   // Handle input change
@@ -35,15 +30,19 @@ function BrandSection() {
   };
 
   // Handle submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const newBrand = {
-      id: brands.length + 1,
-      brandName: formData.brandName,
-    };
-    
-    setBrands([...brands, newBrand]);
+    const token = localStorage.getItem("token");
+    try {
+      await axios.post("http://localhost:3000/api/master-table/", formData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+          },
+      });
+      call();
+    } catch (error) {
+      
+    }
     closeModal();
   };
 
@@ -60,11 +59,21 @@ function BrandSection() {
   };
 
   // Confirm delete
-  const confirmDelete = () => {
-    if (brandToDelete) {
-      setBrands(brands.filter((brand) => brand.id !== brandToDelete));
+  const confirmDelete = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `http://localhost:3000/api/master-table/${brandToDelete}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      call();
       closeDeleteModal();
-    }
+    } catch (error) {}
   };
 
   return (
@@ -87,7 +96,7 @@ function BrandSection() {
           <thead className="bg-indigo-600">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                ID
+                No
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
                 Brand Name
@@ -98,13 +107,17 @@ function BrandSection() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {brands.map((brand) => (
+            {dataBrand.map((brand, index) => (
               <tr key={brand.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4">
-                  <span className="text-sm font-medium text-gray-900">#{brand.id}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {index + 1}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="text-sm font-medium text-gray-900">{brand.brandName}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {brand.name}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

@@ -1,12 +1,36 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import BrandSection from "../components/mastertable/BrandSection";
+import axios from "axios";
 
 function MasterTable() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const [brand, setBrand] = useState([])
+
+  const getBrand = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:3000/api/master-table/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(res.data)
+      setBrand(res.data)
+    } catch (error) {
+
+    }
+  };
+
+
+
+  // Data Fetching
+  useEffect(() => {
+    getBrand();
+  }, []);
 
   const handleLogout = () => {
     navigate("/login");
@@ -37,11 +61,13 @@ function MasterTable() {
           {/* Cards Container */}
           <div className="space-y-6">
             {/* Brand Section */}
-            <BrandSection />
+            <BrandSection dataBrand={brand} call={getBrand} />
 
             {/* Sub Brand Card - Coming Soon */}
             <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Sub Brand</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                Sub Brand
+              </h2>
               <div className="min-h-[200px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center p-8">
                 <p className="text-gray-400 text-center">
                   Sub Brand section - Coming soon
@@ -51,7 +77,9 @@ function MasterTable() {
 
             {/* Product Card - Coming Soon */}
             <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Product</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                Product
+              </h2>
               <div className="min-h-[200px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center p-8">
                 <p className="text-gray-400 text-center">
                   Product section - Coming soon
