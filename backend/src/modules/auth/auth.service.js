@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const repo = require('./auth.repository');
 const { generateToken } = require('../../utils/jwt');
 

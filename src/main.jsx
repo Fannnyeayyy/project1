@@ -10,6 +10,7 @@ import MasterTable from "./pages/MasterTable.jsx";
 import Home from "./pages/Home.jsx";
 import ProtectedAdmin from "./routes/ProtectedAdmin.jsx";
 import ProtectedAuth from "./routes/ProtectedAuth.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 
 createRoot(document.getElementById("root")).render(
@@ -25,8 +26,11 @@ createRoot(document.getElementById("root")).render(
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/user" element={<UserPage />} />
-          <Route path="/mastertable" element={<MasterTable />} />
+          <Route path="/master-table" element={<MasterTable />} />
         </Route>
+
+        {/* Not Found Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

@@ -20,7 +20,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     },
     {
       name: "MasterTable",
-      path: "/mastertable",
+      path: "/master-table",
       icon: Table2,
     },
     {
