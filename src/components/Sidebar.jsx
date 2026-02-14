@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
-import { Home, FileText, User, ChevronsLeft } from "lucide-react";
+import { Home, FileText, User, ChevronsLeft,Table2 } from "lucide-react";
 import indomaret from "../assets/Logo_Indomaret.png";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -19,10 +19,16 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: FileText,
     },
     {
+      name: "MasterTable",
+      path: "/mastertable",
+      icon: Table2,
+    },
+    {
       name: "User",
       path: "/user",
       icon: User,
     },
+    
   ];
 
   const isActive = (path) => location.pathname === path;

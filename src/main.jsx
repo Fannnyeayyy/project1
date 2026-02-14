@@ -6,9 +6,11 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Detail from "./pages/Detail.jsx";
 import UserPage from "./pages/User.jsx";
+import MasterTable from "./pages/MasterTable.jsx";
 import Home from "./pages/Home.jsx";
 import ProtectedAdmin from "./routes/ProtectedAdmin.jsx";
 import ProtectedAuth from "./routes/ProtectedAuth.jsx";
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -23,6 +25,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/user" element={<UserPage />} />
+          <Route path="/mastertable" element={<MasterTable />} />
         </Route>
       </Routes>
     </BrowserRouter>
