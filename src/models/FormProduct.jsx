@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { X, Search } from "lucide-react";
 
 function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData }) {
   const [formData, setFormData] = useState({
@@ -8,21 +8,19 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
     subBrandId: ""
   });
   const [filteredSubBrands, setFilteredSubBrands] = useState([]);
+  const [searchSubBrand, setSearchSubBrand] = useState("");
+  const [showSubBrandDropdown, setShowSubBrandDropdown] = useState(false);
 
   useEffect(() => {
     if (editData) {
-      // Cari brand dari sub brand yang dipilih
       const selectedSubBrand = subBrands?.find(sb => sb.id === editData.subBrandId);
       setFormData({
         name: editData.name,
         brandId: selectedSubBrand?.brandId || "",
         subBrandId: editData.subBrandId
       });
-      // Filter sub brands berdasarkan brand
-      if (selectedSubBrand?.brandId) {
-        const filtered = subBrands?.filter(sb => sb.brandId === selectedSubBrand.brandId) || [];
-        setFilteredSubBrands(filtered);
-      }
+      const filtered = subBrands?.filter(sb => sb.brandId === selectedSubBrand?.brandId) || [];
+      setFilteredSubBrands(filtered);
     } else {
       setFormData({
         name: "",
@@ -31,26 +29,54 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
       });
       setFilteredSubBrands([]);
     }
+    setSearchSubBrand("");
   }, [editData, isOpen, subBrands]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
     if (name === "brandId") {
-      // Saat brand berubah, filter sub brands dan reset sub brand selection
       const filtered = subBrands?.filter(sb => sb.brandId === parseInt(value)) || [];
       setFilteredSubBrands(filtered);
       setFormData({
         ...formData,
         [name]: value,
-        subBrandId: "" // Reset sub brand selection
+        subBrandId: ""
       });
+      setSearchSubBrand("");
+      setShowSubBrandDropdown(false);
     } else {
       setFormData({
         ...formData,
         [name]: value
       });
     }
+  };
+
+  // Filter sub brands berdasarkan search
+  const searchedSubBrands = useMemo(() => {
+    if (!searchSubBrand.trim()) {
+      return filteredSubBrands;
+    }
+    
+    return filteredSubBrands.filter(sb =>
+      sb.name.toLowerCase().includes(searchSubBrand.toLowerCase())
+    );
+  }, [filteredSubBrands, searchSubBrand]);
+
+  const handleSubBrandSelect = (subBrandId) => {
+    setFormData({
+      ...formData,
+      subBrandId
+    });
+    setShowSubBrandDropdown(false);
+    setSearchSubBrand("");
+  };
+
+  const getSelectedSubBrandName = () => {
+    if (!formData.subBrandId) return "Select a sub brand";
+    const selected = subBrands?.find(sb => sb.id === formData.subBrandId);
+    return selected?.name || "Select a sub brand";
   };
 
   const handleSubmit = (e) => {
@@ -65,10 +91,10 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
       return;
     }
     
-    // Submit hanya name dan subBrandId
     onSubmit({ name: formData.name, subBrandId: formData.subBrandId }, editData?.id);
     setFormData({ name: "", brandId: "", subBrandId: "" });
     setFilteredSubBrands([]);
+    setSearchSubBrand("");
   };
 
   if (!isOpen) return null;
@@ -126,27 +152,76 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
             </select>
           </div>
 
-          {/* Sub Brand Select */}
+          {/* Sub Brand Select dengan Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Sub Brand
             </label>
-            <select
-              name="subBrandId"
-              value={formData.subBrandId}
-              onChange={handleChange}
-              disabled={!formData.brandId}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {!formData.brandId ? "Select a brand first" : "Select a sub brand"}
-              </option>
-              {filteredSubBrands && filteredSubBrands.map((subBrand) => (
-                <option key={subBrand.id} value={subBrand.id}>
-                  {subBrand.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSubBrandDropdown(!showSubBrandDropdown)}
+                disabled={!formData.brandId}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed bg-white flex items-center justify-between"
+              >
+                <span className={formData.subBrandId ? "text-gray-900" : "text-gray-500"}>
+                  {getSelectedSubBrandName()}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showSubBrandDropdown ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showSubBrandDropdown && formData.brandId && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                  {/* Search Input */}
+                  <div className="p-2 border-b border-gray-200 sticky top-0 bg-white">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchSubBrand}
+                        onChange={(e) => setSearchSubBrand(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sub Brands List */}
+                  <div className="max-h-48 overflow-y-auto">
+                    {searchedSubBrands && searchedSubBrands.length > 0 ? (
+                      searchedSubBrands.map((subBrand) => (
+                        <button
+                          key={subBrand.id}
+                          type="button"
+                          onClick={() => handleSubBrandSelect(subBrand.id)}
+                          className={`w-full px-4 py-2 text-left hover:bg-blue-50 transition text-sm ${
+                            formData.subBrandId === subBrand.id ? "bg-blue-100 text-blue-900 font-semibold" : "text-gray-900"
+                          }`}
+                        >
+                          {subBrand.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-center text-gray-500 text-sm">
+                        No sub brand found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {!formData.brandId && (
+              <p className="text-xs text-gray-500 mt-1">Select a brand first</p>
+            )}
           </div>
 
           {/* Buttons */}
