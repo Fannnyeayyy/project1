@@ -87,7 +87,7 @@ function Dashboard() {
       }
 
       // Fetch total products
-      const productsRes = await axios.get("http://localhost:3000/api/master-table/products", {
+     const productsRes = await axios.get("http://localhost:3000/api/master-table/product/list", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
