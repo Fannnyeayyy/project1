@@ -21,10 +21,36 @@ const deleteBrand = async (id) => {
     return await repo.deleteBrand(id);
 }
 
+// Sub Brand Services
+const createSubBrand = async (name, brandId) => {
+    return await repo.createSubBrand(name, brandId);
+}
+
+const findAllSubBrands = async () => {
+    return await repo.findAllSubBrands();
+}
+
+const findSubBrandById = async (id) => {
+    return await repo.findSubBrandById(id);
+}
+
+const updateSubBrand = async (id, name, brandId) => {
+    return await repo.updateSubBrand(id, name, brandId);
+}
+
+const deleteSubBrand = async (id) => {
+    return await repo.deleteSubBrand(id);
+}
+
 module.exports = {
     createBrand,
     findAllBrands,
     findBrandById,
     updateBrand,
-    deleteBrand
+    deleteBrand,
+    createSubBrand,
+    findAllSubBrands,
+    findSubBrandById,
+    updateSubBrand,
+    deleteSubBrand
 }

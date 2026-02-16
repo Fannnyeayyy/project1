@@ -3,12 +3,21 @@ import { AlertTriangle } from "lucide-react";
 
 function DeleteConfirmation({ 
   isOpen, 
-  onClose, 
+  onClose,
+  onCancel,
   onConfirm, 
-  title = "Apakah Anda yakin ingin menghapus user ini?",
-  message = "Tindakan ini akan menghapus user secara permanen dan tidak dapat dibatalkan."
+  item = "item",
+  title,
+  message
 }) {
   if (!isOpen) return null;
+
+  // Default title dan message
+  const defaultTitle = title || `Apakah Anda yakin ingin menghapus ${item} ini?`;
+  const defaultMessage = message || `Tindakan ini akan menghapus ${item} secara permanen dan tidak dapat dibatalkan.`;
+
+  // Handle cancel - bisa dari onClose atau onCancel
+  const handleCancel = onCancel || onClose;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -22,12 +31,12 @@ function DeleteConfirmation({
 
         {/* Title */}
         <h2 className="text-xl font-bold text-gray-800 text-center mb-3">
-          {title}
+          {defaultTitle}
         </h2>
 
         {/* Message */}
         <p className="text-gray-600 text-center text-sm mb-8">
-          {message}
+          {defaultMessage}
         </p>
 
         {/* Buttons */}
@@ -42,8 +51,8 @@ function DeleteConfirmation({
 
           {/* Cancel Button */}
           <button
-            onClick={onClose}
-            className="flex-1 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-xl transition shadow-lg"
+            onClick={handleCancel}
+            className="flex-1 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-3 rounded-xl transition shadow-lg border border-gray-300"
           >
             Cancel
           </button>

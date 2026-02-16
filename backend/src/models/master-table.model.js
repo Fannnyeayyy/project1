@@ -9,7 +9,7 @@ const Brand = sequelize.define('brand', {
     },
 });
 
-const subBrand = sequelize.define('sub_brand', {
+const SubBrand = sequelize.define('sub_brand', {
     name: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -34,11 +34,11 @@ const Product = sequelize.define('product', {
 })
 
 // Relasi Table
-Brand.hasMany(subBrand, { foreignKey: 'brandId'})
-subBrand.hasMany(Product, { foreignKey: 'subBrandId'})
+Brand.hasMany(SubBrand, { foreignKey: 'brandId'})
+SubBrand.hasMany(Product, { foreignKey: 'subBrandId'})
 
 module.exports = {
     Brand,
-    subBrand,
+    SubBrand,
     Product
 }

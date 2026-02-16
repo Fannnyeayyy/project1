@@ -1,4 +1,4 @@
-const { Brand, Product, SubBrand } = require('../../models/master-table.model');
+const { Brand, SubBrand, Product } = require('../../models/master-table.model');
 
 // Brand Repository
 const createBrand = async (name) => {
@@ -86,4 +86,3 @@ module.exports = {
     updateProduct,
     deleteProduct
 }
-

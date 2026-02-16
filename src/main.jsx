@@ -12,7 +12,6 @@ import ProtectedAdmin from "./routes/ProtectedAdmin.jsx";
 import ProtectedAuth from "./routes/ProtectedAuth.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
-
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
@@ -21,14 +20,12 @@ createRoot(document.getElementById("root")).render(
         <Route element={<ProtectedAuth />}>
           <Route path="/login" element={<Login />} />
         </Route>
-
         <Route element={<ProtectedAdmin />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/user" element={<UserPage />} />
           <Route path="/master-table" element={<MasterTable />} />
         </Route>
-
         {/* Not Found Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>

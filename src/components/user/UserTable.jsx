@@ -2,9 +2,11 @@ import React from "react";
 import { Trash2, Eye, EyeOff, Edit } from "lucide-react";
 import { ROLE_COLORS } from "../../constants/appConstants";
 
-function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) {
+function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete, onSearch }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           {/* Header */}
@@ -33,14 +35,14 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
 
           {/* Body */}
           <tbody className="divide-y divide-gray-200">
-            {users.length === 0 ? (
+            {users && users.length === 0 ? (
               <tr>
                 <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
                   Tidak ada data user
                 </td>
               </tr>
             ) : (
-              users.map((user, index) => (
+              users && users.map((user, index) => (
                 <tr
                   key={user.id}
                   className={`hover:bg-gray-50 transition ${
@@ -68,13 +70,13 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-700 font-mono">
-                        {showPassword[user.id] ? user.password : "••••••••"}
+                        {showPassword && showPassword[user.id] ? user.password : "••••••••"}
                       </span>
                       <button
-                        onClick={() => onTogglePassword(user.id)}
+                        onClick={() => onTogglePassword && onTogglePassword(user.id)}
                         className="text-gray-400 hover:text-gray-600 transition"
                       >
-                        {showPassword[user.id] ? (
+                        {showPassword && showPassword[user.id] ? (
                           <EyeOff size={18} />
                         ) : (
                           <Eye size={18} />
@@ -111,21 +113,21 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
                       {/* Button Edit */}
                       <button
                         onClick={() => onEdit(user)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        className="inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm"
                         title="Edit user"
                       >
                         <Edit size={16} />
-                        <span>Edit</span>
+                        Edit
                       </button>
 
                       {/* Button Delete */}
                       <button
                         onClick={() => onDelete(user.id)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+                        className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm"
                         title="Hapus user"
                       >
                         <Trash2 size={16} />
-                        <span>Hapus</span>
+                        Delete
                       </button>
                     </div>
                   </td>
