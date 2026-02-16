@@ -4,7 +4,7 @@ import { Edit, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 function ProductTable({ products, subBrands, brands, onEdit, onDelete }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage =5;
 
   const getSubBrandName = (subBrandId) => {
     const subBrand = subBrands?.find(sb => sb.id === subBrandId);
