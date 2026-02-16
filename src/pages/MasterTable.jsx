@@ -5,21 +5,28 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import BrandSection from "../components/mastertable/BrandSection";
 import SubBrandTable from "../components/mastertable/SubBrandTable";
+import ProductTable from "../components/mastertable/ProductTable";
 import FormSubBrand from "../models/FormSubBrand";
+import FormProduct from "../models/FormProduct";
 import DeleteConfirmation from "../components/DeleteConfirmation";
 import Toast from "../components/Toast";
 import axios from "axios";
 import { ambilSemuaSubBrands, tambahSubBrand, editSubBrand, hapusSubBrand } from "../services/subBrandService";
-
+import { ambilSemuaProducts, tambahProduct, editProduct, hapusProduct } from "../services/ProductService";
 function MasterTable() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const [brand, setBrand] = useState([]);
   const [subBrands, setSubBrands] = useState([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [isSubBrandFormOpen, setIsSubBrandFormOpen] = useState(false);
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState(null); // "subBrand" or "product"
   const [subBrandToDelete, setSubBrandToDelete] = useState(null);
-  const [editData, setEditData] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [editSubBrandData, setEditSubBrandData] = useState(null);
+  const [editProductData, setEditProductData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -71,62 +78,75 @@ function MasterTable() {
     }
   };
 
+  // Get all products
+  const getProduct = async () => {
+    try {
+      setLoading(true);
+      const result = await ambilSemuaProducts();
+      if (result.success) {
+        setProducts(result.data);
+      } else {
+        console.error("Error:", result.message);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Data Fetching
   useEffect(() => {
     getBrand();
     getSubBrand();
+    getProduct();
   }, [navigate]);
 
-  // Handle add sub brand
+  // ===== SUB BRAND HANDLERS =====
   const handleAddSubBrand = () => {
-    setEditData(null);
-    setIsFormOpen(true);
+    setEditSubBrandData(null);
+    setIsSubBrandFormOpen(true);
   };
 
-  // Handle edit sub brand
   const handleEditSubBrand = (subBrand) => {
-    setEditData(subBrand);
-    setIsFormOpen(true);
+    setEditSubBrandData(subBrand);
+    setIsSubBrandFormOpen(true);
   };
 
-  // Handle form submit
-  const handleFormSubmit = async (formData, subBrandId) => {
+  const handleSubBrandFormSubmit = async (formData, subBrandId) => {
     try {
       setLoading(true);
       let result;
 
       if (subBrandId) {
-        // Edit mode
         result = await editSubBrand(subBrandId, formData.name, formData.brandId);
       } else {
-        // Add mode
         result = await tambahSubBrand(formData.name, formData.brandId);
       }
 
       if (result.success) {
         showToast(result.message, "success");
-        setIsFormOpen(false);
-        setEditData(null);
+        setIsSubBrandFormOpen(false);
+        setEditSubBrandData(null);
         getSubBrand();
       } else {
         showToast(result.message, "error");
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error:", error);
       showToast("Terjadi kesalahan", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle delete
   const handleDeleteSubBrand = (id) => {
     setSubBrandToDelete(id);
+    setDeleteType("subBrand");
     setDeleteModalOpen(true);
   };
 
-  // Confirm delete
-  const confirmDelete = async () => {
+  const confirmDeleteSubBrand = async () => {
     try {
       setLoading(true);
       const result = await hapusSubBrand(subBrandToDelete);
@@ -140,7 +160,72 @@ function MasterTable() {
         showToast(result.message, "error");
       }
     } catch (error) {
-      console.error("Error deleting sub brand:", error);
+      console.error("Error:", error);
+      showToast("Terjadi kesalahan", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== PRODUCT HANDLERS =====
+  const handleAddProduct = () => {
+    setEditProductData(null);
+    setIsProductFormOpen(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditProductData(product);
+    setIsProductFormOpen(true);
+  };
+
+  const handleProductFormSubmit = async (formData, productId) => {
+    try {
+      setLoading(true);
+      let result;
+
+      if (productId) {
+        result = await editProduct(productId, formData.name, formData.subBrandId);
+      } else {
+        result = await tambahProduct(formData.name, formData.subBrandId);
+      }
+
+      if (result.success) {
+        showToast(result.message, "success");
+        setIsProductFormOpen(false);
+        setEditProductData(null);
+        getProduct();
+      } else {
+        showToast(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      showToast("Terjadi kesalahan", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = (id) => {
+    setProductToDelete(id);
+    setDeleteType("product");
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    try {
+      setLoading(true);
+      const result = await hapusProduct(productToDelete);
+
+      if (result.success) {
+        showToast(result.message, "success");
+        getProduct();
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
+      } else {
+        showToast(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error:", error);
       showToast("Terjadi kesalahan", "error");
     } finally {
       setLoading(false);
@@ -149,6 +234,14 @@ function MasterTable() {
 
   const handleLogout = () => {
     navigate("/login");
+  };
+
+  const confirmDelete = () => {
+    if (deleteType === "subBrand") {
+      confirmDeleteSubBrand();
+    } else if (deleteType === "product") {
+      confirmDeleteProduct();
+    }
   };
 
   return (
@@ -202,16 +295,29 @@ function MasterTable() {
               />
             </div>
 
-            {/* Product Card - Coming Soon */}
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                Product
-              </h2>
-              <div className="min-h-[200px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center p-8">
-                <p className="text-gray-400 text-center">
-                  Product section - Coming soon
-                </p>
+            {/* Product Section */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800">PRODUCTS</h2>
+                <button
+                  onClick={handleAddProduct}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 shadow-sm text-sm"
+                >
+                  <Plus size={18} />
+                  Add Product
+                </button>
               </div>
+
+              {/* Product Table */}
+              <ProductTable
+                products={products}
+                subBrands={subBrands}
+                brands={brand}
+                onEdit={handleEditProduct}
+                onDelete={handleDeleteProduct}
+              />
             </div>
           </div>
         </main>
@@ -228,23 +334,36 @@ function MasterTable() {
 
       {/* Forms & Modals */}
       <FormSubBrand
-        isOpen={isFormOpen}
+        isOpen={isSubBrandFormOpen}
         onClose={() => {
-          setIsFormOpen(false);
-          setEditData(null);
+          setIsSubBrandFormOpen(false);
+          setEditSubBrandData(null);
         }}
-        onSubmit={handleFormSubmit}
+        onSubmit={handleSubBrandFormSubmit}
         brands={brand}
-        editData={editData}
+        editData={editSubBrandData}
+      />
+
+      <FormProduct
+        isOpen={isProductFormOpen}
+        onClose={() => {
+          setIsProductFormOpen(false);
+          setEditProductData(null);
+        }}
+        onSubmit={handleProductFormSubmit}
+        subBrands={subBrands}
+        brands={brand}
+        editData={editProductData}
       />
 
       <DeleteConfirmation
         isOpen={deleteModalOpen}
-        item="Sub Brand"
+        item={deleteType === "subBrand" ? "Sub Brand" : "Product"}
         onConfirm={confirmDelete}
         onCancel={() => {
           setDeleteModalOpen(false);
           setSubBrandToDelete(null);
+          setProductToDelete(null);
         }}
       />
     </div>

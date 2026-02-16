@@ -44,7 +44,6 @@ const createSubBrand = async (req, res) => {
     try {
         const { name, brandId } = req.body;
         
-        // Validate input
         if (!name || !brandId) {
             return res.status(400).json({ message: 'Name and brandId are required' });
         }
@@ -116,14 +115,98 @@ const deleteSubBrand = async (req, res) => {
     }
 };
 
+// ===== PRODUCT CONTROLLERS =====
+const createProduct = async (req, res) => {
+    try {
+        const { name, subBrandId } = req.body;
+        
+        if (!name || !subBrandId) {
+            return res.status(400).json({ message: 'Name and subBrandId are required' });
+        }
+        
+        const product = await service.createProduct(name, subBrandId);
+        res.status(201).json({ 
+            message: 'Product created successfully',
+            data: product 
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getAllProducts = async (req, res) => {
+    try {
+        const products = await service.findAllProducts();
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getProductById = async (req, res) => {
+    try {
+        const product = await service.findProductById(req.params.id);
+        
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateProduct = async (req, res) => {
+    try {
+        const { name, subBrandId } = req.body;
+        
+        if (!name || !subBrandId) {
+            return res.status(400).json({ message: 'Name and subBrandId are required' });
+        }
+        
+        const product = await service.updateProduct(req.params.id, name, subBrandId);
+        
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        res.json({ message: 'Product updated successfully', data: product });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const deleteProduct = async (req, res) => {
+    try {
+        const result = await service.deleteProduct(req.params.id);
+        
+        if (result === 0) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
+    // Brand
     createBrand,
     getAllBrands,
     deleteBrand,
     editBrand,
+    // Sub Brand
     createSubBrand,
     getAllSubBrands,
     getSubBrandById,
     updateSubBrand,
-    deleteSubBrand
+    deleteSubBrand,
+    // Product
+    createProduct,
+    getAllProducts,
+    getProductById,
+    updateProduct,
+    deleteProduct
 }

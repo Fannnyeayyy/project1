@@ -1,6 +1,6 @@
 const repo = require('./master.repository');
 
-// Brand Services
+// ===== BRAND SERVICES =====
 const createBrand = async (name) => {
     return await repo.createBrand(name);
 }
@@ -21,7 +21,7 @@ const deleteBrand = async (id) => {
     return await repo.deleteBrand(id);
 }
 
-// Sub Brand Services
+// ===== SUB BRAND SERVICES =====
 const createSubBrand = async (name, brandId) => {
     return await repo.createSubBrand(name, brandId);
 }
@@ -42,15 +42,44 @@ const deleteSubBrand = async (id) => {
     return await repo.deleteSubBrand(id);
 }
 
+// ===== PRODUCT SERVICES =====
+const createProduct = async (name, subBrandId) => {
+    return await repo.createProduct(name, subBrandId);
+}
+
+const findAllProducts = async () => {
+    return await repo.findAllProducts();
+}
+
+const findProductById = async (id) => {
+    return await repo.findProductById(id);
+}
+
+const updateProduct = async (id, name, subBrandId) => {
+    return await repo.updateProduct(id, name, subBrandId);
+}
+
+const deleteProduct = async (id) => {
+    return await repo.deleteProduct(id);
+}
+
 module.exports = {
+    // Brand
     createBrand,
     findAllBrands,
     findBrandById,
     updateBrand,
     deleteBrand,
+    // Sub Brand
     createSubBrand,
     findAllSubBrands,
     findSubBrandById,
     updateSubBrand,
-    deleteSubBrand
+    deleteSubBrand,
+    // Product
+    createProduct,
+    findAllProducts,
+    findProductById,
+    updateProduct,
+    deleteProduct
 }
