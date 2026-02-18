@@ -6,6 +6,9 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 
 function Dashboard() {
+
+  const baseUrl = 'http://localhost:3000/api/master-table/'
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -87,14 +90,14 @@ function Dashboard() {
       }
 
       // Fetch total products
-     const productsRes = await axios.get("http://localhost:3000/api/master-table/product/list", {
+     const productsRes = await axios.get(`${baseUrl}product/list`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }).catch(() => null);
 
       // Fetch total sub brands
-      const subBrandsRes = await axios.get("http://localhost:3000/api/master-table/sub-brand/list", {
+      const subBrandsRes = await axios.get(`${baseUrl}sub-brand/list`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -116,10 +119,6 @@ function Dashboard() {
   useEffect(() => {
     fetchData();
   }, [navigate]);
-
-  const handleLogout = () => {
-    navigate("/login");
-  };
 
   const handleBrandSelect = (brand) => {
     setSelectedBrand(brand);
@@ -154,7 +153,7 @@ function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Navbar */}
-        <Navbar onLogout={handleLogout} />
+        <Navbar/>
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto px-8 py-6">
@@ -194,9 +193,7 @@ function Dashboard() {
                   <span className="text-2xl">📦</span>
                 </div>
               </div>
-              <p className="text-green-600 text-sm font-semibold mt-4">
-                {stats.growth.products} from last month
-              </p>
+              
             </div>
 
             {/* Total Sub Brand Card */}

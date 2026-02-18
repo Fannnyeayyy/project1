@@ -12,5 +12,8 @@ export default function ProtectedAdmin() {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return (
+  <>
+  <Outlet />
+  </>);
 }

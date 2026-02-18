@@ -1,7 +1,13 @@
-import React from "react";
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router";
 
-function Navbar({ onLogout }) {
+function Navbar() {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
   return (
     <header className="bg-white shadow-sm">
       <div className="flex items-center justify-between px-6 py-4">
@@ -23,7 +29,7 @@ function Navbar({ onLogout }) {
 
           {/* Logout */}
           <button
-            onClick={onLogout}
+            onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
           >
             <LogOut size={18} />
