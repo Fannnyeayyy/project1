@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-function FormSubBrand({ isOpen, onClose, onSubmit, brands, editData }) {
+function FormSubBrand({ isOpen, onClose, onSubmit, brands, editData, onError = () => {} }) {
   const [formData, setFormData] = useState({
     name: "",
     brandId: ""
@@ -33,12 +33,12 @@ function FormSubBrand({ isOpen, onClose, onSubmit, brands, editData }) {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert("Sub Brand name is required");
+      onError("Sub Brand name is required");
       return;
     }
 
     if (!formData.brandId) {
-      alert("Please select a brand");
+      onError("Pilih brand terlebih dahulu");
       return;
     }
 

@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 const inputStyle = { appearance: "none", border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none" };
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
 
-function FormLeadtime({ isOpen, onClose, onSubmit, editData, brands = [], subBrands = [], products = [] }) {
+function FormLeadtime({ isOpen, onClose, onSubmit, onError = () => {}, editData, brands = [], subBrands = [], products = [] }) {
   const empty = { brandId: "", subBrandId: "", productId: "", qtyOrder: "", eta: "", status: false, actualArrivalDate: "" };
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ function FormLeadtime({ isOpen, onClose, onSubmit, editData, brands = [], subBra
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.subBrandId || !form.productId || !form.qtyOrder || !form.eta) return alert("Semua field wajib diisi");
+    if (!form.brandId || !form.subBrandId || !form.productId || !form.qtyOrder || !form.eta) return onError("Semua field wajib diisi");
     setLoading(true);
     await onSubmit({ ...form, brandId: parseInt(form.brandId), subBrandId: parseInt(form.subBrandId), productId: parseInt(form.productId), qtyOrder: parseInt(form.qtyOrder) }, editData?.id);
     setLoading(false);

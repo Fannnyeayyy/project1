@@ -1,155 +1,42 @@
 /**
  * detailService.js
- * Service untuk komunikasi frontend ke API /api/detail.
- * Semua fungsi mengembalikan { success, data } atau { success, message }
- * konsisten dengan service lainnya di project ini.
+ * Service untuk semua tabel detail + forecast.
  */
+import axios from "axios";
 
-const BASE_URL = "http://localhost:3000/api/detail";
+const BASE = "http://localhost:3000/api/detail";
+const headers = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
-const getToken = () => localStorage.getItem("token");
+const call = async (fn) => { try { return await fn(); } catch (e) { return { success: false, message: e.response?.data?.message || e.message }; } };
 
-const headers = () => ({
-  "Content-Type": "application/json",
-  Authorization: "Bearer " + getToken(),
-});
-
-const handleResponse = async (res) => {
-  const data = await res.json();
-  if (res.ok) return { success: true, data: data.data ?? data };
-  return { success: false, message: data.message || "Terjadi kesalahan" };
-};
-
-const catchError = (error) => ({ success: false, message: error.message });
-
-// ── LEADTIME DELIVERY ─────────────────────────────────────────────────────────
-
-export const getLeadtime = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/leadtime${params ? "?" + params : ""}`, { headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const tambahLeadtime = async (body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/leadtime`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const editLeadtime = async (id, body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/leadtime/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const hapusLeadtime = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}/leadtime/${id}`, { method: "DELETE", headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
+// ── LEADTIME ──────────────────────────────────────────────────────────────────
+export const getLeadtime          = (p) => call(async () => { const r = await axios.get(`${BASE}/leadtime`, { headers: headers(), params: p }); return r.data; });
+export const tambahLeadtime       = (d) => call(async () => { const r = await axios.post(`${BASE}/leadtime`, d, { headers: headers() }); return r.data; });
+export const editLeadtime         = (id, d) => call(async () => { const r = await axios.put(`${BASE}/leadtime/${id}`, d, { headers: headers() }); return r.data; });
+export const hapusLeadtime        = (id) => call(async () => { const r = await axios.delete(`${BASE}/leadtime/${id}`, { headers: headers() }); return r.data; });
 
 // ── STOCK INDOMARET ───────────────────────────────────────────────────────────
+export const getStockIndomaret    = (p) => call(async () => { const r = await axios.get(`${BASE}/stock-indomaret`, { headers: headers(), params: p }); return r.data; });
+export const tambahStockIndomaret = (d) => call(async () => { const r = await axios.post(`${BASE}/stock-indomaret`, d, { headers: headers() }); return r.data; });
+export const editStockIndomaret   = (id, d) => call(async () => { const r = await axios.put(`${BASE}/stock-indomaret/${id}`, d, { headers: headers() }); return r.data; });
+export const hapusStockIndomaret  = (id) => call(async () => { const r = await axios.delete(`${BASE}/stock-indomaret/${id}`, { headers: headers() }); return r.data; });
 
-export const getStockIndomaret = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/stock-indomaret${params ? "?" + params : ""}`, { headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const tambahStockIndomaret = async (body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-indomaret`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const editStockIndomaret = async (id, body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-indomaret/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const hapusStockIndomaret = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-indomaret/${id}`, { method: "DELETE", headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-// ── SERVICE LEVEL PERFORMANCE ─────────────────────────────────────────────────
-
-export const getServiceLevel = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/service-level${params ? "?" + params : ""}`, { headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-// Khusus untuk dashboard — aggregate total sales per brand
-export const getSalesPerBrand = async () => {
-  try {
-    const res = await fetch(`${BASE_URL}/service-level/sales-per-brand`, { headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const tambahServiceLevel = async (body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/service-level`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const editServiceLevel = async (id, body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/service-level/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const hapusServiceLevel = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}/service-level/${id}`, { method: "DELETE", headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
+// ── SERVICE LEVEL ─────────────────────────────────────────────────────────────
+export const getServiceLevel      = (p) => call(async () => { const r = await axios.get(`${BASE}/service-level`, { headers: headers(), params: p }); return r.data; });
+export const getSalesPerBrand     = ()  => call(async () => { const r = await axios.get(`${BASE}/service-level/sales-per-brand`, { headers: headers() }); return r.data; });
+export const tambahServiceLevel   = (d) => call(async () => { const r = await axios.post(`${BASE}/service-level`, d, { headers: headers() }); return r.data; });
+export const editServiceLevel     = (id, d) => call(async () => { const r = await axios.put(`${BASE}/service-level/${id}`, d, { headers: headers() }); return r.data; });
+export const hapusServiceLevel    = (id) => call(async () => { const r = await axios.delete(`${BASE}/service-level/${id}`, { headers: headers() }); return r.data; });
 
 // ── STOCK DISTRIBUTOR ─────────────────────────────────────────────────────────
+export const getStockDistributor  = (p) => call(async () => { const r = await axios.get(`${BASE}/stock-distributor`, { headers: headers(), params: p }); return r.data; });
+export const tambahStockDistributor = (d) => call(async () => { const r = await axios.post(`${BASE}/stock-distributor`, d, { headers: headers() }); return r.data; });
+export const editStockDistributor = (id, d) => call(async () => { const r = await axios.put(`${BASE}/stock-distributor/${id}`, d, { headers: headers() }); return r.data; });
+export const hapusStockDistributor = (id) => call(async () => { const r = await axios.delete(`${BASE}/stock-distributor/${id}`, { headers: headers() }); return r.data; });
 
-export const getStockDistributor = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/stock-distributor${params ? "?" + params : ""}`, { headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const tambahStockDistributor = async (body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-distributor`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const editStockDistributor = async (id, body) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-distributor/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(body) });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
-
-export const hapusStockDistributor = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}/stock-distributor/${id}`, { method: "DELETE", headers: headers() });
-    return handleResponse(res);
-  } catch (e) { return catchError(e); }
-};
+// ── FORECAST ──────────────────────────────────────────────────────────────────
+export const getForecast          = (p) => call(async () => { const r = await axios.get(`${BASE}/forecast`, { headers: headers(), params: p }); return r.data; });
+export const getLatestForecast    = ()  => call(async () => { const r = await axios.get(`${BASE}/forecast/latest`, { headers: headers() }); return r.data; });
+export const tambahForecast       = (d) => call(async () => { const r = await axios.post(`${BASE}/forecast`, d, { headers: headers() }); return r.data; });
+export const editForecast         = (id, d) => call(async () => { const r = await axios.put(`${BASE}/forecast/${id}`, d, { headers: headers() }); return r.data; });
+export const hapusForecast        = (id) => call(async () => { const r = await axios.delete(`${BASE}/forecast/${id}`, { headers: headers() }); return r.data; });

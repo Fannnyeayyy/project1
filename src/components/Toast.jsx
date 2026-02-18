@@ -39,7 +39,7 @@ function Toast({
   };
 
   return (
-    <div className="fixed top-6 right-6 z-50 animate-slide-in">
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] animate-slide-in">
       <div className={`${bgColors[type]} border rounded-xl shadow-lg p-4 pr-12 min-w-[320px] max-w-md relative`}>
         {/* Close Button */}
         <button

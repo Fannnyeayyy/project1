@@ -2,6 +2,7 @@ import React from "react";
 import { X, Eye, EyeOff } from "lucide-react";
 
 function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
+  const [showPassword, setShowPassword] = React.useState(false);
   if (!isOpen) return null;
 
   return (

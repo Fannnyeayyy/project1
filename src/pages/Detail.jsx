@@ -1,9 +1,3 @@
-/**
- * Detail.jsx
- * Halaman 4 tabel operasional dengan CRUD lengkap.
- * Filter brand/sub brand berlaku untuk semua tabel sekaligus.
- * Setiap tabel punya tombol Add, Edit, Delete dengan modal popup.
- */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Sidebar from "../components/Sidebar";
@@ -14,16 +8,17 @@ import FormLeadtime from "../models/FormLeadtime";
 import FormStockIndomaret from "../models/FormStockIndomaret";
 import FormServiceLevel from "../models/FormServiceLevel";
 import FormStockDistributor from "../models/FormStockDistributor";
-import { Search, Truck, ShoppingBag, BarChart2, Package, ChevronLeft, ChevronRight, RefreshCw, Plus, Edit, Trash2 } from "lucide-react";
+import FormForecast from "../models/FormForecast";
+import { Search, Truck, ShoppingBag, BarChart2, Package, TrendingUp, ChevronLeft, ChevronRight, RefreshCw, Plus, Edit, Trash2 } from "lucide-react";
 import {
   getLeadtime, tambahLeadtime, editLeadtime, hapusLeadtime,
   getStockIndomaret, tambahStockIndomaret, editStockIndomaret, hapusStockIndomaret,
   getServiceLevel, tambahServiceLevel, editServiceLevel, hapusServiceLevel,
   getStockDistributor, tambahStockDistributor, editStockDistributor, hapusStockDistributor,
+  getForecast, tambahForecast, editForecast, hapusForecast,
 } from "../services/detailService";
 import axios from "axios";
 
-// ── BADGE ─────────────────────────────────────────────────────────────────────
 function Badge({ value }) {
   const map = {
     true:            { bg: "#d1fae5", color: "#10b981", label: "Active" },
@@ -34,15 +29,10 @@ function Badge({ value }) {
     "Below Average": { bg: "#fee2e2", color: "#ef4444", label: "Below Average" },
   };
   const s = map[String(value)] || { bg: "#f1f5f9", color: "#64748b", label: String(value) };
-  return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
+  return <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>;
 }
 
-// ── TABLE WRAPPER ─────────────────────────────────────────────────────────────
-function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }) {
+function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 7;
@@ -57,27 +47,17 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Search */}
       <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid #f1f5f9", background: "#f8fafc" }}>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={13} style={{ color: "#94a3b8" }} />
-          <input
-            type="text"
-            placeholder="Cari data..."
-            value={search}
+          <input type="text" placeholder="Cari data..." value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="w-full pl-8 pr-4 py-2 text-sm rounded-lg outline-none"
-            style={{ border: "1px solid #e2e8f0", background: "white", color: "#1e293b" }}
-            onFocus={e => e.currentTarget.style.borderColor = "#3b82f6"}
-            onBlur={e => e.currentTarget.style.borderColor = "#e2e8f0"}
-          />
+            style={{ border: "1px solid #e2e8f0", background: "white", color: "#1e293b" }} />
         </div>
-        <span className="text-xs" style={{ color: "#94a3b8" }}>
-          <strong style={{ color }}>{filtered.length}</strong> entri ditemukan
-        </span>
+        <span className="text-xs" style={{ color: "#94a3b8" }}><strong style={{ color }}>{filtered.length}</strong> entri</span>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto flex-1">
         {loading ? (
           <div className="flex items-center justify-center h-40 text-sm" style={{ color: "#94a3b8" }}>Memuat data...</div>
@@ -86,9 +66,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
                 {columns.map(col => (
-                  <th key={col.key} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>
-                    {col.label}
-                  </th>
+                  <th key={col.key} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>{col.label}</th>
                 ))}
                 <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>Aksi</th>
               </tr>
@@ -127,29 +105,20 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }
                   </td>
                 </tr>
               )) : (
-                <tr>
-                  <td colSpan={columns.length + 1} className="px-5 py-14 text-center text-sm" style={{ color: "#94a3b8" }}>
-                    Tidak ada data
-                  </td>
-                </tr>
+                <tr><td colSpan={columns.length + 1} className="px-5 py-14 text-center text-sm" style={{ color: "#94a3b8" }}>Tidak ada data</td></tr>
               )}
             </tbody>
           </table>
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-3" style={{ borderTop: "1px solid #f1f5f9" }}>
-          <span className="text-xs" style={{ color: "#94a3b8" }}>
-            Halaman <strong style={{ color: "#1e293b" }}>{page}</strong> dari <strong style={{ color: "#1e293b" }}>{totalPages}</strong>
-          </span>
+          <span className="text-xs" style={{ color: "#94a3b8" }}>Halaman <strong style={{ color: "#1e293b" }}>{page}</strong> dari <strong style={{ color: "#1e293b" }}>{totalPages}</strong></span>
           <div className="flex gap-1">
             <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1}
               className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
-              style={{ border: "1px solid #e2e8f0", color: "#64748b" }}>
-              <ChevronLeft size={14} />
-            </button>
+              style={{ border: "1px solid #e2e8f0", color: "#64748b" }}><ChevronLeft size={14} /></button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
               <button key={p} onClick={() => setPage(p)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold transition-all"
@@ -159,9 +128,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }
             ))}
             <button onClick={() => setPage(p => Math.min(p + 1, totalPages))} disabled={page === totalPages}
               className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
-              style={{ border: "1px solid #e2e8f0", color: "#64748b" }}>
-              <ChevronRight size={14} />
-            </button>
+              style={{ border: "1px solid #e2e8f0", color: "#64748b" }}><ChevronRight size={14} /></button>
           </div>
         </div>
       )}
@@ -169,38 +136,33 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, accentBg }
   );
 }
 
-// ── PAGE ──────────────────────────────────────────────────────────────────────
 function Detail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("leadtime");
   const navigate = useNavigate();
 
-  // Master data untuk dropdown form
   const [brands, setBrands] = useState([]);
   const [subBrands, setSubBrands] = useState([]);
   const [products, setProducts] = useState([]);
 
-  // Filter global
   const [filterBrand, setFilterBrand] = useState("");
   const [filterSubBrand, setFilterSubBrand] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Data tabel
   const [leadtime, setLeadtime] = useState([]);
   const [stockIndomaret, setStockIndomaret] = useState([]);
   const [serviceLevel, setServiceLevel] = useState([]);
   const [stockDistributor, setStockDistributor] = useState([]);
+  const [forecast, setForecast] = useState([]);
 
-  // Modal state
-  const [formOpen, setFormOpen] = useState({ leadtime: false, stockIndomaret: false, serviceLevel: false, stockDistributor: false });
-  const [editData, setEditData] = useState({ leadtime: null, stockIndomaret: null, serviceLevel: null, stockDistributor: null });
+  const [formOpen, setFormOpen] = useState({ leadtime: false, stockIndomaret: false, serviceLevel: false, stockDistributor: false, forecast: false });
+  const [editData, setEditData] = useState({ leadtime: null, stockIndomaret: null, serviceLevel: null, stockDistributor: null, forecast: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null, type: null });
   const [toast, setToast] = useState({ isOpen: false, type: "success", message: "" });
 
   const showToast = (type, message) => setToast({ isOpen: true, type, message });
   const closeToast = () => setToast(prev => ({ ...prev, isOpen: false }));
 
-  // Ambil master data
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
@@ -210,7 +172,6 @@ function Detail() {
     axios.get("http://localhost:3000/api/master-table/product/list", { headers: h }).then(r => setProducts(r.data)).catch(() => {});
   }, []);
 
-  // Fetch semua tabel
   useEffect(() => { fetchAll(); }, [filterBrand, filterSubBrand]);
 
   const fetchAll = async () => {
@@ -218,82 +179,49 @@ function Detail() {
     const filters = {};
     if (filterBrand) filters.brandId = filterBrand;
     if (filterSubBrand) filters.subBrandId = filterSubBrand;
-    const [lt, si, sl, sd] = await Promise.all([
+    const [lt, si, sl, sd, fc] = await Promise.all([
       getLeadtime(filters), getStockIndomaret(filters),
       getServiceLevel(filters), getStockDistributor(filters),
+      getForecast(filterBrand ? { brandId: filterBrand } : {}),
     ]);
     if (lt.success) setLeadtime(lt.data);
     if (si.success) setStockIndomaret(si.data);
     if (sl.success) setServiceLevel(sl.data);
     if (sd.success) setStockDistributor(sd.data);
+    if (fc.success) setForecast(fc.data);
     setLoading(false);
   };
 
   const filteredSubBrands = filterBrand ? subBrands.filter(sb => sb.brandId === parseInt(filterBrand)) : subBrands;
 
-  // ── HANDLERS ────────────────────────────────────────────────────────────────
-  const openAdd = (type) => {
-    setEditData(prev => ({ ...prev, [type]: null }));
-    setFormOpen(prev => ({ ...prev, [type]: true }));
-  };
-
-  const openEdit = (type, row) => {
-    setEditData(prev => ({ ...prev, [type]: row }));
-    setFormOpen(prev => ({ ...prev, [type]: true }));
-  };
-
-  const closeForm = (type) => {
-    setFormOpen(prev => ({ ...prev, [type]: false }));
-    setEditData(prev => ({ ...prev, [type]: null }));
-  };
-
+  const openAdd  = (type) => { setEditData(prev => ({ ...prev, [type]: null })); setFormOpen(prev => ({ ...prev, [type]: true })); };
+  const openEdit = (type, row) => { setEditData(prev => ({ ...prev, [type]: row })); setFormOpen(prev => ({ ...prev, [type]: true })); };
+  const closeForm = (type) => { setFormOpen(prev => ({ ...prev, [type]: false })); setEditData(prev => ({ ...prev, [type]: null })); };
   const openDelete = (type, id) => setDeleteModal({ open: true, id, type });
   const closeDelete = () => setDeleteModal({ open: false, id: null, type: null });
 
-  // Submit handlers
-  const handleSubmitLeadtime = async (data, id) => {
-    const result = id ? await editLeadtime(id, data) : await tambahLeadtime(data);
-    if (result.success) { showToast("success", id ? "Leadtime diupdate!" : "Leadtime ditambahkan!"); closeForm("leadtime"); fetchAll(); }
-    else showToast("error", result.message);
-  };
-
-  const handleSubmitStockIndomaret = async (data, id) => {
-    const result = id ? await editStockIndomaret(id, data) : await tambahStockIndomaret(data);
-    if (result.success) { showToast("success", id ? "Stock diupdate!" : "Stock ditambahkan!"); closeForm("stockIndomaret"); fetchAll(); }
-    else showToast("error", result.message);
-  };
-
-  const handleSubmitServiceLevel = async (data, id) => {
-    const result = id ? await editServiceLevel(id, data) : await tambahServiceLevel(data);
-    if (result.success) { showToast("success", id ? "Service level diupdate!" : "Service level ditambahkan!"); closeForm("serviceLevel"); fetchAll(); }
-    else showToast("error", result.message);
-  };
-
-  const handleSubmitStockDistributor = async (data, id) => {
-    const result = id ? await editStockDistributor(id, data) : await tambahStockDistributor(data);
-    if (result.success) { showToast("success", id ? "Stock diupdate!" : "Stock ditambahkan!"); closeForm("stockDistributor"); fetchAll(); }
+  const makeSubmit = (type, addFn, editFn, label) => async (data, id) => {
+    const result = id ? await editFn(id, data) : await addFn(data);
+    if (result.success) { showToast("success", id ? `${label} diupdate!` : `${label} ditambahkan!`); closeForm(type); fetchAll(); }
     else showToast("error", result.message);
   };
 
   const confirmDelete = async () => {
     const { id, type } = deleteModal;
-    const fnMap = { leadtime: hapusLeadtime, stockIndomaret: hapusStockIndomaret, serviceLevel: hapusServiceLevel, stockDistributor: hapusStockDistributor };
+    const fnMap = { leadtime: hapusLeadtime, stockIndomaret: hapusStockIndomaret, serviceLevel: hapusServiceLevel, stockDistributor: hapusStockDistributor, forecast: hapusForecast };
     const result = await fnMap[type](id);
     if (result.success) { showToast("success", "Data berhasil dihapus!"); fetchAll(); }
     else showToast("error", result.message);
     closeDelete();
   };
 
-  // ── TABS CONFIG ──────────────────────────────────────────────────────────────
   const tabs = [
     {
       key: "leadtime", label: "Leadtime Delivery", icon: Truck, color: "#2563eb", bg: "#eff6ff",
-      data: leadtime,
-      onAdd: () => openAdd("leadtime"),
-      onEdit: (row) => openEdit("leadtime", row),
-      onDelete: (id) => openDelete("leadtime", id),
+      data: leadtime, onAdd: () => openAdd("leadtime"), onEdit: r => openEdit("leadtime", r), onDelete: id => openDelete("leadtime", id),
       columns: [
         { key: "id", label: "ID" },
+        { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
         { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
         { key: "product", label: "Product", render: (_, r) => r.product?.name ?? "—" },
         { key: "qtyOrder", label: "Qty Order" },
@@ -304,10 +232,7 @@ function Detail() {
     },
     {
       key: "stock_indomaret", label: "Stock Indomaret", icon: ShoppingBag, color: "#10b981", bg: "#d1fae5",
-      data: stockIndomaret,
-      onAdd: () => openAdd("stockIndomaret"),
-      onEdit: (row) => openEdit("stockIndomaret", row),
-      onDelete: (id) => openDelete("stockIndomaret", id),
+      data: stockIndomaret, onAdd: () => openAdd("stockIndomaret"), onEdit: r => openEdit("stockIndomaret", r), onDelete: id => openDelete("stockIndomaret", id),
       columns: [
         { key: "id", label: "ID" },
         { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
@@ -320,10 +245,7 @@ function Detail() {
     },
     {
       key: "service_level", label: "Service Level", icon: BarChart2, color: "#7c3aed", bg: "#ede9fe",
-      data: serviceLevel,
-      onAdd: () => openAdd("serviceLevel"),
-      onEdit: (row) => openEdit("serviceLevel", row),
-      onDelete: (id) => openDelete("serviceLevel", id),
+      data: serviceLevel, onAdd: () => openAdd("serviceLevel"), onEdit: r => openEdit("serviceLevel", r), onDelete: id => openDelete("serviceLevel", id),
       columns: [
         { key: "id", label: "ID" },
         { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
@@ -338,10 +260,7 @@ function Detail() {
     },
     {
       key: "stock_distributor", label: "Stock Distributor", icon: Package, color: "#f59e0b", bg: "#fef3c7",
-      data: stockDistributor,
-      onAdd: () => openAdd("stockDistributor"),
-      onEdit: (row) => openEdit("stockDistributor", row),
-      onDelete: (id) => openDelete("stockDistributor", id),
+      data: stockDistributor, onAdd: () => openAdd("stockDistributor"), onEdit: r => openEdit("stockDistributor", r), onDelete: id => openDelete("stockDistributor", id),
       columns: [
         { key: "id", label: "ID" },
         { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
@@ -350,7 +269,21 @@ function Detail() {
         { key: "stockQuantity", label: "Stock Qty" },
         { key: "avgL3m", label: "Avg L3M" },
         { key: "totalValue", label: "Total Value", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
-        { key: "lastUpdated", label: "Last Updated", render: v => v ? new Date(v).toLocaleDateString("id-ID") : "—" },
+        { key: "periodDate", label: "Period" },
+      ]
+    },
+    {
+      key: "forecast", label: "Forecast", icon: TrendingUp, color: "#0ea5e9", bg: "#e0f2fe",
+      data: forecast, onAdd: () => openAdd("forecast"), onEdit: r => openEdit("forecast", r), onDelete: id => openDelete("forecast", id),
+      columns: [
+        { key: "id", label: "ID" },
+        { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
+        { key: "plan", label: "Plan" },
+        { key: "week1", label: "Week 1", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
+        { key: "week2", label: "Week 2", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
+        { key: "week3", label: "Week 3", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
+        { key: "week4", label: "Week 4", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
+        { key: "periodDate", label: "Period" },
       ]
     },
   ];
@@ -360,12 +293,9 @@ function Detail() {
   return (
     <div className="flex h-screen" style={{ background: "#f1f5f9" }}>
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-
         <main className="flex-1 overflow-y-auto px-7 py-6 flex flex-col">
-          {/* Header */}
           <div className="mb-6">
             <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#1e293b" }}>Detail</h1>
             <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Data operasional Indomaret secara detail</p>
@@ -385,16 +315,14 @@ function Detail() {
               {filteredSubBrands.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
             </select>
             <button onClick={() => { setFilterBrand(""); setFilterSubBrand(""); }}
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg transition-all"
-              style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}
-              onMouseEnter={e => e.currentTarget.style.background = "#e2e8f0"}
-              onMouseLeave={e => e.currentTarget.style.background = "#f1f5f9"}>
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg"
+              style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>
               <RefreshCw size={12} /> Reset
             </button>
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-5">
+          <div className="grid grid-cols-5 gap-4 mb-5">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
@@ -405,10 +333,9 @@ function Detail() {
                     <div className="p-2 rounded-lg" style={{ background: tab.bg }}>
                       <Icon size={15} style={{ color: tab.color }} />
                     </div>
-                    <span className="text-xs font-bold" style={{ color: tab.color }}>{tab.data.length} data</span>
+                    <span className="text-xs font-bold" style={{ color: tab.color }}>{tab.data.length}</span>
                   </div>
                   <p className="text-xs font-bold" style={{ color: "#1e293b" }}>{tab.label}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: "#94a3b8" }}>{tab.columns.length} kolom</p>
                 </button>
               );
             })}
@@ -416,7 +343,6 @@ function Detail() {
 
           {/* Table Card */}
           <div className="bg-white rounded-xl flex flex-col flex-1 min-h-0" style={{ border: "1px solid #e2e8f0" }}>
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg" style={{ background: current.bg }}>
@@ -428,7 +354,6 @@ function Detail() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* Tab pills */}
                 <div className="flex gap-1.5">
                   {tabs.map(tab => (
                     <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -438,35 +363,25 @@ function Detail() {
                     </button>
                   ))}
                 </div>
-                {/* Add button */}
                 <button onClick={current.onAdd}
-                  className="inline-flex items-center gap-2 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all"
-                  style={{ background: current.color }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+                  className="inline-flex items-center gap-2 text-white text-xs font-semibold px-3 py-2 rounded-lg"
+                  style={{ background: current.color }}>
                   <Plus size={13} /> Tambah
                 </button>
               </div>
             </div>
-
-            <DataTable
-              columns={current.columns}
-              data={current.data}
-              loading={loading}
-              onEdit={current.onEdit}
-              onDelete={current.onDelete}
-              color={current.color}
-              accentBg={current.bg}
-            />
+            <DataTable columns={current.columns} data={current.data} loading={loading}
+              onEdit={current.onEdit} onDelete={current.onDelete} color={current.color} />
           </div>
         </main>
       </div>
 
       {/* Modals */}
-      <FormLeadtime isOpen={formOpen.leadtime} onClose={() => closeForm("leadtime")} onSubmit={handleSubmitLeadtime} editData={editData.leadtime} brands={brands} subBrands={subBrands} products={products} />
-      <FormStockIndomaret isOpen={formOpen.stockIndomaret} onClose={() => closeForm("stockIndomaret")} onSubmit={handleSubmitStockIndomaret} editData={editData.stockIndomaret} brands={brands} subBrands={subBrands} products={products} />
-      <FormServiceLevel isOpen={formOpen.serviceLevel} onClose={() => closeForm("serviceLevel")} onSubmit={handleSubmitServiceLevel} editData={editData.serviceLevel} brands={brands} subBrands={subBrands} products={products} />
-      <FormStockDistributor isOpen={formOpen.stockDistributor} onClose={() => closeForm("stockDistributor")} onSubmit={handleSubmitStockDistributor} editData={editData.stockDistributor} brands={brands} subBrands={subBrands} products={products} />
+      <FormLeadtime isOpen={formOpen.leadtime} onClose={() => closeForm("leadtime")} onSubmit={makeSubmit("leadtime", tambahLeadtime, editLeadtime, "Leadtime")} onError={(msg) => showToast("error", msg)} editData={editData.leadtime} brands={brands} subBrands={subBrands} products={products} />
+      <FormStockIndomaret isOpen={formOpen.stockIndomaret} onClose={() => closeForm("stockIndomaret")} onSubmit={makeSubmit("stockIndomaret", tambahStockIndomaret, editStockIndomaret, "Stock Indomaret")} onError={(msg) => showToast("error", msg)} editData={editData.stockIndomaret} brands={brands} subBrands={subBrands} products={products} />
+      <FormServiceLevel isOpen={formOpen.serviceLevel} onClose={() => closeForm("serviceLevel")} onSubmit={makeSubmit("serviceLevel", tambahServiceLevel, editServiceLevel, "Service Level")} onError={(msg) => showToast("error", msg)} editData={editData.serviceLevel} brands={brands} subBrands={subBrands} products={products} />
+      <FormStockDistributor isOpen={formOpen.stockDistributor} onClose={() => closeForm("stockDistributor")} onSubmit={makeSubmit("stockDistributor", tambahStockDistributor, editStockDistributor, "Stock Distributor")} onError={(msg) => showToast("error", msg)} editData={editData.stockDistributor} brands={brands} subBrands={subBrands} products={products} />
+      <FormForecast isOpen={formOpen.forecast} onClose={() => closeForm("forecast")} onSubmit={makeSubmit("forecast", tambahForecast, editForecast, "Forecast")} onError={(msg) => showToast("error", msg)} editData={editData.forecast} brands={brands} />
 
       <DeleteConfirmation isOpen={deleteModal.open} onConfirm={confirmDelete} onCancel={closeDelete} item="data ini" />
       <Toast isOpen={toast.isOpen} onClose={closeToast} type={toast.type} message={toast.message} duration={3000} />

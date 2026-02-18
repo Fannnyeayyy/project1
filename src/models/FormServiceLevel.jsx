@@ -14,7 +14,7 @@ const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "
 
 const CATEGORIES = ["Excellent", "Good", "Average", "Below Average"];
 
-function FormServiceLevel({ isOpen, onClose, onSubmit, editData, brands = [], subBrands = [], products = [] }) {
+function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editData, brands = [], subBrands = [], products = [] }) {
   const empty = { brandId: "", subBrandId: "", productId: "", totalSales: "", salesQuantity: "", salesRank: "", performanceCategory: "", percentageOfTotal: "", periodDate: "" };
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,7 @@ function FormServiceLevel({ isOpen, onClose, onSubmit, editData, brands = [], su
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.subBrandId || !form.productId || !form.totalSales || !form.salesQuantity || !form.periodDate) return alert("Semua field wajib diisi");
+    if (!form.brandId || !form.subBrandId || !form.productId || !form.totalSales || !form.salesQuantity || !form.periodDate) return onError("Semua field wajib diisi");
     setLoading(true);
     await onSubmit({
       ...form,

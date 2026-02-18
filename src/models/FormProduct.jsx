@@ -10,7 +10,7 @@ import { X, Search } from "lucide-react";
 const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" };
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
 
-function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData }) {
+function FormProduct({ isOpen, onClose, onSubmit, onError = () => {}, subBrands, brands, editData }) {
   const empty = { name: "", brandId: "", subBrandId: "", hargaPerCarton: "", qtyPerCarton: "" };
   const [formData, setFormData] = useState(empty);
   const [searchSubBrand, setSearchSubBrand] = useState("");
@@ -60,9 +60,9 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return alert("Nama product wajib diisi");
-    if (!formData.subBrandId) return alert("Pilih sub brand terlebih dahulu");
-    if (!formData.hargaPerCarton || !formData.qtyPerCarton) return alert("Harga dan qty per karton wajib diisi");
+    if (!formData.name.trim()) return onError("Nama product wajib diisi");
+    if (!formData.subBrandId) return onError("Pilih sub brand terlebih dahulu");
+    if (!formData.hargaPerCarton || !formData.qtyPerCarton) return onError("Harga dan qty per karton wajib diisi");
     onSubmit({
       name: formData.name,
       subBrandId: formData.subBrandId,

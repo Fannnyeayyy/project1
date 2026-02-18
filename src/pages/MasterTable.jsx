@@ -180,12 +180,13 @@ function MasterTable() {
         </main>
       </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <Toast isOpen={!!toast} message={toast?.message} type={toast?.type} onClose={() => setToast(null)} duration={3000} />
 
       <FormSubBrand
         isOpen={isSubBrandFormOpen}
         onClose={() => { setIsSubBrandFormOpen(false); setEditSubBrandData(null); }}
         onSubmit={handleSubBrandFormSubmit}
+        onError={(msg) => showToast(msg, "error")}
         brands={brand}
         editData={editSubBrandData}
       />
@@ -193,6 +194,7 @@ function MasterTable() {
         isOpen={isProductFormOpen}
         onClose={() => { setIsProductFormOpen(false); setEditProductData(null); }}
         onSubmit={handleProductFormSubmit}
+        onError={(msg) => showToast(msg, "error")}
         subBrands={subBrands}
         brands={brand}
         editData={editProductData}
