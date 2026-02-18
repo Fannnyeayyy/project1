@@ -43,8 +43,8 @@ const deleteSubBrand = async (id) => {
 }
 
 // ===== PRODUCT SERVICES =====
-const createProduct = async (name, subBrandId) => {
-    return await repo.createProduct(name, subBrandId);
+const createProduct = async (name, subBrandId, hargaPerCarton = 0, qtyPerCarton = 1) => {
+    return await repo.createProduct(name, subBrandId, hargaPerCarton, qtyPerCarton);
 }
 
 const findAllProducts = async () => {
@@ -55,8 +55,8 @@ const findProductById = async (id) => {
     return await repo.findProductById(id);
 }
 
-const updateProduct = async (id, name, subBrandId) => {
-    return await repo.updateProduct(id, name, subBrandId);
+const updateProduct = async (id, name, subBrandId, hargaPerCarton, qtyPerCarton) => {
+    return await repo.updateProduct(id, name, subBrandId, hargaPerCarton, qtyPerCarton);
 }
 
 const deleteProduct = async (id) => {

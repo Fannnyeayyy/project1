@@ -1,142 +1,52 @@
 const { Brand, SubBrand, Product } = require('../../models/master-table.model');
 
-// ===== BRAND REPOSITORY =====
-const createBrand = async (name) => {
-    return await Brand.create({ name });
-}
+// ===== BRAND =====
+const createBrand  = async (name) => Brand.create({ name });
+const findAllBrands = async () => Brand.findAll();
+const findBrandById = async (id) => Brand.findByPk(id);
+const updateBrand  = async (id, name) => { const b = await Brand.findByPk(id); return b ? b.update({ name }) : null; };
+const deleteBrand  = async (id) => Brand.destroy({ where: { id } });
 
-const findAllBrands = async () => {
-    return await Brand.findAll();
-}
+// ===== SUB BRAND =====
+const createSubBrand   = async (name, brandId) => SubBrand.create({ name, brandId });
+const findAllSubBrands = async () => SubBrand.findAll();
+const findSubBrandById = async (id) => SubBrand.findByPk(id);
+const updateSubBrand   = async (id, name, brandId) => { const sb = await SubBrand.findByPk(id); return sb ? sb.update({ name, brandId }) : null; };
+const deleteSubBrand   = async (id) => SubBrand.destroy({ where: { id } });
 
-const findBrandById = async (id) => {
-    return await Brand.findByPk(id);
-}
+// ===== PRODUCT =====
+const createProduct = async (name, subBrandId, hargaPerCarton = 0, qtyPerCarton = 1) => Product.create({ name, subBrandId, hargaPerCarton, qtyPerCarton });
 
-const updateBrand = async (id, name) => {
-    const brand = await Brand.findByPk(id);
-    if (!brand) return null;
-    return await brand.update({ name });
-}
-
-const deleteBrand = async (id) => {
-    return await Brand.destroy({ where: { id } });
-}
-
-// ===== SUB BRAND REPOSITORY =====
-const createSubBrand = async (name, brandId) => {
-    return await SubBrand.create({ name, brandId });
-}
-
-const findAllSubBrands = async () => {
-    return await SubBrand.findAll();
-}
-
-const findSubBrandById = async (id) => {
-    return await SubBrand.findByPk(id);
-}
-
-const updateSubBrand = async (id, name, brandId) => {
-    const subBrand = await SubBrand.findByPk(id);
-    if (!subBrand) return null;
-    return await subBrand.update({ name, brandId });
-}
-
-const deleteSubBrand = async (id) => {
-    return await SubBrand.destroy({ where: { id } });
-}
-
-// ===== PRODUCT REPOSITORY =====
-const createProduct = async (name, subBrandId) => {
-    return await Product.create({ name, subBrandId });
-}
-
+// Fix: hapus alias 'as' yang tidak didefinisikan di model — penyebab fallback ke findAll tanpa include
 const findAllProducts = async () => {
-    try {
-        return await Product.findAll({
-            include: [
-                {
-                    model: SubBrand,
-                    as: 'SubBrand',
-                    attributes: ['id', 'name', 'brandId'],
-                    include: [
-                        {
-                            model: Brand,
-                            as: 'Brand',
-                            attributes: ['id', 'name']
-                        }
-                    ]
-                }
-            ]
-        });
-    } catch (error) {
-        console.error("Error in findAllProducts:", error);
-        // Fallback ke query tanpa relasi
-        return await Product.findAll();
-    }
-}
+    return await Product.findAll({
+        include: [{
+            model: SubBrand,
+            attributes: ['id', 'name', 'brandId'],
+            include: [{ model: Brand, attributes: ['id', 'name'] }]
+        }]
+    });
+};
 
 const findProductById = async (id) => {
-    try {
-        return await Product.findByPk(id, {
-            include: [
-                {
-                    model: SubBrand,
-                    as: 'SubBrand',
-                    attributes: ['id', 'name', 'brandId'],
-                    include: [
-                        {
-                            model: Brand,
-                            as: 'Brand',
-                            attributes: ['id', 'name']
-                        }
-                    ]
-                }
-            ]
-        });
-    } catch (error) {
-        console.error("Error in findProductById:", error);
-        return await Product.findByPk(id);
-    }
-}
+    return await Product.findByPk(id, {
+        include: [{
+            model: SubBrand,
+            attributes: ['id', 'name', 'brandId'],
+            include: [{ model: Brand, attributes: ['id', 'name'] }]
+        }]
+    });
+};
 
-const updateProduct = async (id, name, subBrandId) => {
-    try {
-        const product = await Product.findByPk(id);
-        if (!product) return null;
-        return await product.update({ name, subBrandId });
-    } catch (error) {
-        console.error("Error in updateProduct:", error);
-        throw error;
-    }
-}
+const updateProduct = async (id, name, subBrandId, hargaPerCarton, qtyPerCarton) => {
+    const product = await Product.findByPk(id);
+    return product ? product.update({ name, subBrandId, hargaPerCarton, qtyPerCarton }) : null;
+};
 
-const deleteProduct = async (id) => {
-    try {
-        return await Product.destroy({ where: { id } });
-    } catch (error) {
-        console.error("Error in deleteProduct:", error);
-        throw error;
-    }
-}
+const deleteProduct = async (id) => Product.destroy({ where: { id } });
 
 module.exports = {
-    // Brand
-    createBrand,
-    findAllBrands,
-    findBrandById,
-    updateBrand,
-    deleteBrand,
-    // Sub Brand
-    createSubBrand,
-    findAllSubBrands,
-    findSubBrandById,
-    updateSubBrand,
-    deleteSubBrand,
-    // Product
-    createProduct,
-    findAllProducts,
-    findProductById,
-    updateProduct,
-    deleteProduct
-}
+    createBrand, findAllBrands, findBrandById, updateBrand, deleteBrand,
+    createSubBrand, findAllSubBrands, findSubBrandById, updateSubBrand, deleteSubBrand,
+    createProduct, findAllProducts, findProductById, updateProduct, deleteProduct,
+};

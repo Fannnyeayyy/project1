@@ -9,7 +9,11 @@ const register = async (username, password, role = 'user') => {
 
 const login = async (username, password) => {
   const user = await repo.findByUsername(username);
-  if (!user) throw new Error('User not found');
+  if (!user) throw new Error('Username atau password salah');
+
+  // Verifikasi password dengan bcrypt
+  const isValid = await repo.verifyPassword(password, user.password);
+  if (!isValid) throw new Error('Username atau password salah');
 
   const access_token = generateToken({
     id: user.id,
@@ -19,43 +23,26 @@ const login = async (username, password) => {
 
   return {
     access_token,
-    user: {
-      id: user.id,
-      name: user.username,
-      role: user.role
-    }
-  }
+    user: { id: user.id, name: user.username, role: user.role }
+  };
 };
 
-const getAllUsers = async () => {
-  return await repo.findAll();
-};
-
+const getAllUsers = async () => await repo.findAll();
 const getUserById = async (id) => {
   const user = await repo.findById(id);
   if (!user) throw new Error('User not found');
   return user;
 };
-
 const deleteUser = async (id) => {
   const user = await repo.findById(id);
   if (!user) throw new Error('User not found');
-  
   await repo.deleteUser(id);
   return { message: 'User deleted successfully' };
 };
-
 const updateUser = async (id, username, password, role) => {
   const user = await repo.updateUser(id, username, password, role);
   if (!user) throw new Error('User not found');
   return user;
 };
 
-module.exports = {
-  register,
-  login,
-  getAllUsers,
-  getUserById,
-  deleteUser,
-  updateUser
-};
+module.exports = { register, login, getAllUsers, getUserById, deleteUser, updateUser };

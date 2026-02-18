@@ -118,13 +118,13 @@ const deleteSubBrand = async (req, res) => {
 // ===== PRODUCT CONTROLLERS =====
 const createProduct = async (req, res) => {
     try {
-        const { name, subBrandId } = req.body;
+        const { name, subBrandId, hargaPerCarton, qtyPerCarton } = req.body;
         
         if (!name || !subBrandId) {
             return res.status(400).json({ message: 'Name and subBrandId are required' });
         }
         
-        const product = await service.createProduct(name, subBrandId);
+        const product = await service.createProduct(name, subBrandId, hargaPerCarton, qtyPerCarton);
         res.status(201).json({ 
             message: 'Product created successfully',
             data: product 
@@ -159,13 +159,13 @@ const getProductById = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { name, subBrandId } = req.body;
+        const { name, subBrandId, hargaPerCarton, qtyPerCarton } = req.body;
         
         if (!name || !subBrandId) {
             return res.status(400).json({ message: 'Name and subBrandId are required' });
         }
         
-        const product = await service.updateProduct(req.params.id, name, subBrandId);
+        const product = await service.updateProduct(req.params.id, name, subBrandId, hargaPerCarton, qtyPerCarton);
         
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });

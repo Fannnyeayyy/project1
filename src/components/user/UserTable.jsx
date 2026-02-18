@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2, Eye, EyeOff, Edit } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) {
   return (
@@ -7,7 +7,7 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
       <table className="w-full">
         <thead>
           <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-            {["ID", "Username", "Password", "Role", "Created At", "Action"].map(h => (
+            {["ID", "Username", "Role", "Created At", "Action"].map(h => (
               <th key={h} className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>
                 {h}
               </th>
@@ -17,7 +17,7 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
         <tbody>
           {users && users.length === 0 ? (
             <tr>
-              <td colSpan="6" className="px-6 py-12 text-center text-sm" style={{ color: "#94a3b8" }}>
+              <td colSpan="5" className="px-6 py-12 text-center text-sm" style={{ color: "#94a3b8" }}>
                 Tidak ada data user
               </td>
             </tr>
@@ -46,23 +46,6 @@ function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) 
                       {user.username.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm font-medium" style={{ color: "#1e293b" }}>{user.username}</span>
-                  </div>
-                </td>
-
-                {/* Password */}
-                <td className="px-6 py-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono" style={{ color: "#64748b" }}>
-                      {showPassword?.[user.id] ? user.password : "••••••••"}
-                    </span>
-                    <button
-                      onClick={() => onTogglePassword?.(user.id)}
-                      style={{ color: "#94a3b8" }}
-                      onMouseEnter={e => e.currentTarget.style.color = "#64748b"}
-                      onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
-                    >
-                      {showPassword?.[user.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
                   </div>
                 </td>
 

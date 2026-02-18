@@ -1,154 +1,54 @@
+/**
+ * productService.js
+ * Service untuk CRUD product.
+ * Versi 2: tambah hargaPerCarton dan qtyPerCarton di tambah/edit.
+ */
 const BASE_URL = "http://localhost:3000/api/master-table";
+const getToken = () => localStorage.getItem("token");
+const headers  = () => ({ "Content-Type": "application/json", "Authorization": "Bearer " + getToken() });
 
-const getToken = () => {
-  return localStorage.getItem("token");
-};
-
-const headers = () => ({
-  "Content-Type": "application/json",
-  "Authorization": "Bearer " + getToken()
-});
-
-// ========== GET ALL PRODUCTS ==========
 export const ambilSemuaProducts = async () => {
   try {
-    const res = await fetch(`${BASE_URL}/product/list`, {
-      method: "GET",
-      headers: headers()
-    });
-
+    const res  = await fetch(`${BASE_URL}/product/list`, { headers: headers() });
     if (!res.ok) throw new Error("Gagal mengambil products");
-
-    const data = await res.json();
-
-    return {
-      success: true,
-      data: data
-    };
-
-  } catch (error) {
-    return {
-      success: false,
-      message: error.message
-    };
-  }
+    return { success: true, data: await res.json() };
+  } catch (e) { return { success: false, message: e.message }; }
 };
 
-// ========== GET PRODUCT BY ID ==========
 export const ambilProductById = async (id) => {
   try {
-    const res = await fetch(`${BASE_URL}/product/${id}`, {
-      method: "GET",
-      headers: headers()
-    });
-
+    const res = await fetch(`${BASE_URL}/product/${id}`, { headers: headers() });
     if (!res.ok) throw new Error("Gagal mengambil product");
+    return { success: true, data: await res.json() };
+  } catch (e) { return { success: false, message: e.message }; }
+};
 
+export const tambahProduct = async (name, subBrandId, hargaPerCarton = 0, qtyPerCarton = 1) => {
+  try {
+    const res  = await fetch(`${BASE_URL}/product`, {
+      method: "POST", headers: headers(),
+      body: JSON.stringify({ name, subBrandId, hargaPerCarton, qtyPerCarton }),
+    });
     const data = await res.json();
-
-    return {
-      success: true,
-      data: data
-    };
-
-  } catch (error) {
-    return {
-      success: false,
-      message: error.message
-    };
-  }
+    return res.ok ? { success: true, message: data.message, data: data.data } : { success: false, message: data.message };
+  } catch (e) { return { success: false, message: e.message }; }
 };
 
-// ========== TAMBAH PRODUCT ==========
-export const tambahProduct = async (name, subBrandId) => {
+export const editProduct = async (id, name, subBrandId, hargaPerCarton = 0, qtyPerCarton = 1) => {
   try {
-    const response = await fetch(`${BASE_URL}/product`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({ name, subBrandId }),
+    const res  = await fetch(`${BASE_URL}/product/${id}`, {
+      method: "PUT", headers: headers(),
+      body: JSON.stringify({ name, subBrandId, hargaPerCarton, qtyPerCarton }),
     });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      return {
-        success: true,
-        message: data.message || "Product berhasil ditambahkan",
-        data: data.data
-      };
-    } else {
-      return {
-        success: false,
-        message: data.message || "Gagal menambahkan product"
-      };
-    }
-  } catch (error) {
-    console.error("Error adding product:", error);
-    return {
-      success: false,
-      message: error.message || "Terjadi kesalahan"
-    };
-  }
+    const data = await res.json();
+    return res.ok ? { success: true, message: data.message, data: data.data } : { success: false, message: data.message };
+  } catch (e) { return { success: false, message: e.message }; }
 };
 
-// ========== EDIT PRODUCT ==========
-export const editProduct = async (id, name, subBrandId) => {
-  try {
-    const response = await fetch(`${BASE_URL}/product/${id}`, {
-      method: "PUT",
-      headers: headers(),
-      body: JSON.stringify({ name, subBrandId }),
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      return {
-        success: true,
-        message: data.message || "Product berhasil diupdate",
-        data: data.data
-      };
-    } else {
-      return {
-        success: false,
-        message: data.message || "Gagal mengupdate product"
-      };
-    }
-  } catch (error) {
-    console.error("Error editing product:", error);
-    return {
-      success: false,
-      message: error.message || "Terjadi kesalahan"
-    };
-  }
-};
-
-// ========== HAPUS PRODUCT ==========
 export const hapusProduct = async (id) => {
   try {
-    const response = await fetch(`${BASE_URL}/product/${id}`, {
-      method: "DELETE",
-      headers: headers()
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      return {
-        success: true,
-        message: "Product berhasil dihapus"
-      };
-    } else {
-      return {
-        success: false,
-        message: data.message || "Gagal menghapus product"
-      };
-    }
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    return {
-      success: false,
-      message: error.message || "Terjadi kesalahan"
-    };
-  }
+    const res  = await fetch(`${BASE_URL}/product/${id}`, { method: "DELETE", headers: headers() });
+    const data = await res.json();
+    return res.ok ? { success: true, message: "Product berhasil dihapus" } : { success: false, message: data.message };
+  } catch (e) { return { success: false, message: e.message }; }
 };

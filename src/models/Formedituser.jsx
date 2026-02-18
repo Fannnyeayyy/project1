@@ -1,5 +1,5 @@
 import React from "react";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 
 function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
   if (!isOpen) return null;
@@ -48,14 +48,23 @@ function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
             <label className="block text-base font-medium text-gray-700 mb-2">
               Password
             </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password || ""}
-              onChange={onInputChange}
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              placeholder="Kosongkan jika tidak diubah"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password || ""}
+                onChange={onInputChange}
+                className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-12"
+                placeholder="Kosongkan jika tidak diubah"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <p className="text-sm text-gray-500 mt-2">
               * Kosongkan jika tidak ingin mengubah password
             </p>

@@ -12,7 +12,7 @@ import DeleteConfirmation from "../components/DeleteConfirmation";
 import Toast from "../components/Toast";
 import axios from "axios";
 import { ambilSemuaSubBrands, tambahSubBrand, editSubBrand, hapusSubBrand } from "../services/subBrandService";
-import { ambilSemuaProducts, tambahProduct, editProduct, hapusProduct } from "../services/ProductService";
+import { ambilSemuaProducts, tambahProduct, editProduct, hapusProduct } from "../services/productService";
 
 function MasterTable() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -100,8 +100,8 @@ function MasterTable() {
     try {
       setLoading(true);
       const result = productId
-        ? await editProduct(productId, formData.name, formData.subBrandId)
-        : await tambahProduct(formData.name, formData.subBrandId);
+        ? await editProduct(productId, formData.name, formData.subBrandId, formData.hargaPerCarton, formData.qtyPerCarton)
+        : await tambahProduct(formData.name, formData.subBrandId, formData.hargaPerCarton, formData.qtyPerCarton);
       if (result.success) { showToast(result.message, "success"); setIsProductFormOpen(false); setEditProductData(null); getProduct(); }
       else showToast(result.message, "error");
     } catch (error) { showToast("Terjadi kesalahan", "error"); }

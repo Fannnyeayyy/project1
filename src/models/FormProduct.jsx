@@ -1,13 +1,18 @@
+/**
+ * FormProduct.jsx
+ * Modal form untuk tambah / edit Product.
+ * Versi 2: tambah field hargaPerCarton dan qtyPerCarton.
+ * Data ini dipakai untuk auto-kalkulasi totalValue di Stock tabel.
+ */
 import React, { useState, useEffect, useMemo } from "react";
 import { X, Search } from "lucide-react";
 
+const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" };
+const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
+
 function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    brandId: "",
-    subBrandId: ""
-  });
-  const [filteredSubBrands, setFilteredSubBrands] = useState([]);
+  const empty = { name: "", brandId: "", subBrandId: "", hargaPerCarton: "", qtyPerCarton: "" };
+  const [formData, setFormData] = useState(empty);
   const [searchSubBrand, setSearchSubBrand] = useState("");
   const [showSubBrandDropdown, setShowSubBrandDropdown] = useState(false);
 
@@ -17,227 +22,148 @@ function FormProduct({ isOpen, onClose, onSubmit, subBrands, brands, editData })
       setFormData({
         name: editData.name,
         brandId: selectedSubBrand?.brandId || "",
-        subBrandId: editData.subBrandId
+        subBrandId: editData.subBrandId,
+        hargaPerCarton: editData.hargaPerCarton ?? "",
+        qtyPerCarton: editData.qtyPerCarton ?? "",
       });
-      const filtered = subBrands?.filter(sb => sb.brandId === selectedSubBrand?.brandId) || [];
-      setFilteredSubBrands(filtered);
     } else {
-      setFormData({
-        name: "",
-        brandId: "",
-        subBrandId: ""
-      });
-      setFilteredSubBrands([]);
+      setFormData(empty);
     }
     setSearchSubBrand("");
-  }, [editData, isOpen, subBrands]);
+    setShowSubBrandDropdown(false);
+  }, [editData, isOpen]);
+
+  const filteredSubBrands = useMemo(() => {
+    const byBrand = formData.brandId ? subBrands?.filter(sb => sb.brandId === parseInt(formData.brandId)) : subBrands;
+    return searchSubBrand ? byBrand?.filter(sb => sb.name.toLowerCase().includes(searchSubBrand.toLowerCase())) : byBrand;
+  }, [subBrands, formData.brandId, searchSubBrand]);
+
+  const formatRupiah = (val) => val.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const parseRupiah  = (val) => val.replace(/\./g, "");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     if (name === "brandId") {
-      const filtered = subBrands?.filter(sb => sb.brandId === parseInt(value)) || [];
-      setFilteredSubBrands(filtered);
-      setFormData({
-        ...formData,
-        [name]: value,
-        subBrandId: ""
-      });
+      setFormData(prev => ({ ...prev, brandId: value, subBrandId: "" }));
       setSearchSubBrand("");
-      setShowSubBrandDropdown(false);
+    } else if (name === "hargaPerCarton") {
+      setFormData(prev => ({ ...prev, hargaPerCarton: parseRupiah(value) }));
     } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-  };
-
-  // Filter sub brands berdasarkan search
-  const searchedSubBrands = useMemo(() => {
-    if (!searchSubBrand.trim()) {
-      return filteredSubBrands;
-    }
-    
-    return filteredSubBrands.filter(sb =>
-      sb.name.toLowerCase().includes(searchSubBrand.toLowerCase())
-    );
-  }, [filteredSubBrands, searchSubBrand]);
-
-  const handleSubBrandSelect = (subBrandId) => {
-    setFormData({
-      ...formData,
-      subBrandId
-    });
-    setShowSubBrandDropdown(false);
-    setSearchSubBrand("");
   };
 
   const getSelectedSubBrandName = () => {
-    if (!formData.subBrandId) return "Select a sub brand";
-    const selected = subBrands?.find(sb => sb.id === formData.subBrandId);
-    return selected?.name || "Select a sub brand";
+    if (!formData.subBrandId) return "Pilih Sub Brand";
+    return subBrands?.find(sb => sb.id === formData.subBrandId)?.name || "Pilih Sub Brand";
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!formData.name.trim()) {
-      alert("Product name is required");
-      return;
-    }
-    if (!formData.subBrandId) {
-      alert("Please select a sub brand");
-      return;
-    }
-    
-    onSubmit({ name: formData.name, subBrandId: formData.subBrandId }, editData?.id);
-    setFormData({ name: "", brandId: "", subBrandId: "" });
-    setFilteredSubBrands([]);
-    setSearchSubBrand("");
+    if (!formData.name.trim()) return alert("Nama product wajib diisi");
+    if (!formData.subBrandId) return alert("Pilih sub brand terlebih dahulu");
+    if (!formData.hargaPerCarton || !formData.qtyPerCarton) return alert("Harga dan qty per karton wajib diisi");
+    onSubmit({
+      name: formData.name,
+      subBrandId: formData.subBrandId,
+      hargaPerCarton: parseFloat(formData.hargaPerCarton),
+      qtyPerCarton: parseInt(formData.qtyPerCarton),
+    }, editData?.id);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.5)" }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: "1px solid #e2e8f0" }}>
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {editData ? "Edit Product" : "Add New Product"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition"
-          >
-            <X size={24} />
-          </button>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <span className="text-sm font-bold" style={{ color: "#1e293b" }}>{editData ? "Edit Product" : "Tambah Product"}</span>
+          <button onClick={onClose} style={{ color: "#94a3b8" }}><X size={18} /></button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Product Name */}
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+          {/* Nama Product */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter product name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
+            <label style={labelStyle}>Nama Product</label>
+            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Masukkan nama product" style={inputStyle} />
           </div>
 
-          {/* Brand Select */}
+          {/* Brand */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand
-            </label>
-            <select
-              name="brandId"
-              value={formData.brandId}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select a brand</option>
-              {brands && brands.map((brand) => (
-                <option key={brand.id} value={brand.id}>
-                  {brand.name}
-                </option>
-              ))}
+            <label style={labelStyle}>Brand</label>
+            <select name="brandId" value={formData.brandId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
+              <option value="">Pilih Brand</option>
+              {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
 
-          {/* Sub Brand Select dengan Search */}
+          {/* Sub Brand dengan search dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sub Brand
-            </label>
+            <label style={labelStyle}>Sub Brand</label>
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowSubBrandDropdown(!showSubBrandDropdown)}
-                disabled={!formData.brandId}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed bg-white flex items-center justify-between"
-              >
-                <span className={formData.subBrandId ? "text-gray-900" : "text-gray-500"}>
-                  {getSelectedSubBrandName()}
-                </span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${showSubBrandDropdown ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <button type="button" onClick={() => setShowSubBrandDropdown(!showSubBrandDropdown)} disabled={!formData.brandId}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg disabled:opacity-50"
+                style={{ border: "1px solid #e2e8f0", background: "white", color: formData.subBrandId ? "#1e293b" : "#94a3b8" }}>
+                {getSelectedSubBrandName()}
+                <svg className={`w-4 h-4 transition-transform ${showSubBrandDropdown ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-
-              {/* Dropdown Menu */}
               {showSubBrandDropdown && formData.brandId && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-                  {/* Search Input */}
-                  <div className="p-2 border-b border-gray-200 sticky top-0 bg-white">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg z-50" style={{ border: "1px solid #e2e8f0" }}>
+                  <div className="p-2" style={{ borderBottom: "1px solid #f1f5f9" }}>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        value={searchSubBrand}
-                        onChange={(e) => setSearchSubBrand(e.target.value)}
-                        className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2" size={12} style={{ color: "#94a3b8" }} />
+                      <input type="text" placeholder="Cari..." value={searchSubBrand} onChange={e => setSearchSubBrand(e.target.value)}
+                        className="w-full pl-7 pr-3 py-1.5 text-sm rounded-lg outline-none"
+                        style={{ border: "1px solid #e2e8f0" }} onClick={e => e.stopPropagation()} />
                     </div>
                   </div>
-
-                  {/* Sub Brands List */}
-                  <div className="max-h-48 overflow-y-auto">
-                    {searchedSubBrands && searchedSubBrands.length > 0 ? (
-                      searchedSubBrands.map((subBrand) => (
-                        <button
-                          key={subBrand.id}
-                          type="button"
-                          onClick={() => handleSubBrandSelect(subBrand.id)}
-                          className={`w-full px-4 py-2 text-left hover:bg-blue-50 transition text-sm ${
-                            formData.subBrandId === subBrand.id ? "bg-blue-100 text-blue-900 font-semibold" : "text-gray-900"
-                          }`}
-                        >
-                          {subBrand.name}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-center text-gray-500 text-sm">
-                        No sub brand found
-                      </div>
-                    )}
+                  <div className="max-h-40 overflow-y-auto">
+                    {filteredSubBrands?.length > 0 ? filteredSubBrands.map(sb => (
+                      <button key={sb.id} type="button" onClick={() => { setFormData(prev => ({ ...prev, subBrandId: sb.id })); setShowSubBrandDropdown(false); }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition"
+                        style={{ color: formData.subBrandId === sb.id ? "#2563eb" : "#1e293b", fontWeight: formData.subBrandId === sb.id ? 600 : 400 }}>
+                        {sb.name}
+                      </button>
+                    )) : <div className="px-4 py-3 text-sm text-center" style={{ color: "#94a3b8" }}>Tidak ditemukan</div>}
                   </div>
                 </div>
               )}
             </div>
-            {!formData.brandId && (
-              <p className="text-xs text-gray-500 mt-1">Select a brand first</p>
-            )}
+            {!formData.brandId && <p className="text-xs mt-1" style={{ color: "#94a3b8" }}>Pilih brand terlebih dahulu</p>}
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-            >
-              {editData ? "Update" : "Add"}
+          {/* Harga & Qty Per Carton */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>Harga / Karton (Rp)</label>
+              <input type="text" name="hargaPerCarton" value={formatRupiah(formData.hargaPerCarton)} onChange={handleChange}
+                placeholder="0" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Qty / Karton (pcs)</label>
+              <input type="number" name="qtyPerCarton" value={formData.qtyPerCarton} onChange={handleChange}
+                placeholder="1" style={inputStyle} min="1" />
+            </div>
+          </div>
+
+          {/* Preview kalkulasi */}
+          {formData.hargaPerCarton && formData.qtyPerCarton && (
+            <div className="px-4 py-3 rounded-lg text-sm" style={{ background: "#eff6ff", border: "1px solid #dbeafe" }}>
+              <span style={{ color: "#64748b" }}>Harga per pcs: </span>
+              <strong style={{ color: "#2563eb" }}>
+                Rp {(parseFloat(formData.hargaPerCarton) / parseInt(formData.qtyPerCarton)).toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+              </strong>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-semibold"
+              style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>Batal</button>
+            <button type="submit" className="flex-1 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "#2563eb" }}>
+              {editData ? "Update" : "Simpan"}
             </button>
           </div>
         </form>
