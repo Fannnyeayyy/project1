@@ -1,142 +1,120 @@
 import React from "react";
 import { Trash2, Eye, EyeOff, Edit } from "lucide-react";
-import { ROLE_COLORS } from "../../constants/appConstants";
 
-function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete, onSearch }) {
+function UserTable({ users, showPassword, onTogglePassword, onEdit, onDelete }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          {/* Header */}
-          <thead className="bg-gradient-to-r from-indigo-600 to-blue-600">
+    <div className="overflow-x-auto flex-1">
+      <table className="w-full">
+        <thead>
+          <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+            {["ID", "Username", "Password", "Role", "Created At", "Action"].map(h => (
+              <th key={h} className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {users && users.length === 0 ? (
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Username
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Password
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Created At
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                Action
-              </th>
+              <td colSpan="6" className="px-6 py-12 text-center text-sm" style={{ color: "#94a3b8" }}>
+                Tidak ada data user
+              </td>
             </tr>
-          </thead>
+          ) : (
+            users && users.map((user) => (
+              <tr
+                key={user.id}
+                style={{ borderBottom: "1px solid #f1f5f9" }}
+                onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                {/* ID */}
+                <td className="px-6 py-3.5">
+                  <span className="text-xs font-mono" style={{ color: "#94a3b8" }}>
+                    {String(user.id).padStart(2, "0")}
+                  </span>
+                </td>
 
-          {/* Body */}
-          <tbody className="divide-y divide-gray-200">
-            {users && users.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                  Tidak ada data user
+                {/* Username */}
+                <td className="px-6 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, #2563eb, #60a5fa)" }}
+                    >
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: "#1e293b" }}>{user.username}</span>
+                  </div>
+                </td>
+
+                {/* Password */}
+                <td className="px-6 py-3.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono" style={{ color: "#64748b" }}>
+                      {showPassword?.[user.id] ? user.password : "••••••••"}
+                    </span>
+                    <button
+                      onClick={() => onTogglePassword?.(user.id)}
+                      style={{ color: "#94a3b8" }}
+                      onMouseEnter={e => e.currentTarget.style.color = "#64748b"}
+                      onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
+                    >
+                      {showPassword?.[user.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </td>
+
+                {/* Role */}
+                <td className="px-6 py-3.5">
+                  <span
+                    className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                    style={
+                      user.role === "admin"
+                        ? { background: "#dbeafe", color: "#2563eb" }
+                        : { background: "#f1f5f9", color: "#64748b" }
+                    }
+                  >
+                    {user.role === "admin" ? "Admin" : "User"}
+                  </span>
+                </td>
+
+                {/* Created At */}
+                <td className="px-6 py-3.5 text-sm" style={{ color: "#64748b" }}>
+                  {new Date(user.createdAt).toLocaleDateString("id-ID", {
+                    year: "numeric", month: "short", day: "numeric",
+                  })}
+                </td>
+
+                {/* Action */}
+                <td className="px-6 py-3.5">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onEdit(user)}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                      style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#dbeafe"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#eff6ff"}
+                    >
+                      <Edit size={12} /> Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(user.id)}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                      style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fecaca" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#fca5a5"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#fee2e2"}
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
-            ) : (
-              users && users.map((user, index) => (
-                <tr
-                  key={user.id}
-                  className={`hover:bg-gray-50 transition ${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}
-                >
-                  {/* ID */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{user.id}
-                  </td>
-
-                  {/* Username */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {user.username}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Password */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-700 font-mono">
-                        {showPassword && showPassword[user.id] ? user.password : "••••••••"}
-                      </span>
-                      <button
-                        onClick={() => onTogglePassword && onTogglePassword(user.id)}
-                        className="text-gray-400 hover:text-gray-600 transition"
-                      >
-                        {showPassword && showPassword[user.id] ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
-
-                  {/* Role */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 text-xs font-semibold rounded-full border ${
-                        ROLE_COLORS[user.role] || "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {user.role === "admin" ? "👑 Admin" : "👤 User"}
-                    </span>
-                  </td>
-
-                  {/* Created At */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(user.createdAt).toLocaleDateString('id-ID', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </td>
-
-                  {/* Aksi */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {/* Button Edit */}
-                      <button
-                        onClick={() => onEdit(user)}
-                        className="inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm"
-                        title="Edit user"
-                      >
-                        <Edit size={16} />
-                        Edit
-                      </button>
-
-                      {/* Button Delete */}
-                      <button
-                        onClick={() => onDelete(user.id)}
-                        className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition shadow-sm"
-                        title="Hapus user"
-                      >
-                        <Trash2 size={16} />
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

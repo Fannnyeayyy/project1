@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import FormTambahBrand from "../../models/Formtambahbrand";
@@ -10,157 +9,101 @@ function BrandSection({ dataBrand, call }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState(null);
   const [editData, setEditData] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-  });
+  const [formData, setFormData] = useState({ name: "" });
 
-  // Open modal
-  const openModal = () => {
-    setEditData(null);
-    setFormData({ name: "" });
-    setIsModalOpen(true);
-  };
+  const openModal = () => { setEditData(null); setFormData({ name: "" }); setIsModalOpen(true); };
+  const openEditModal = (brand) => { setEditData(brand); setFormData({ name: brand.name }); setIsModalOpen(true); };
+  const closeModal = () => { setIsModalOpen(false); setFormData({ name: "" }); setEditData(null); };
+  const handleInputChange = (e) => { const { name, value } = e.target; setFormData({ ...formData, [name]: value }); };
 
-  // Open modal for edit
-  const openEditModal = (brand) => {
-    setEditData(brand);
-    setFormData({ name: brand.name });
-    setIsModalOpen(true);
-  };
-
-  // Close modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setFormData({ name: "" });
-    setEditData(null);
-  };
-
-  // Handle input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
       if (editData) {
-        // Edit mode
-        await axios.put(`http://localhost:3000/api/master-table/${editData.id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await axios.put(`http://localhost:3000/api/master-table/${editData.id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        // Create mode
-        await axios.post("http://localhost:3000/api/master-table/", formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await axios.post("http://localhost:3000/api/master-table/", formData, { headers: { Authorization: `Bearer ${token}` } });
       }
-      call();
-      closeModal();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Terjadi kesalahan");
-    }
+      call(); closeModal();
+    } catch (error) { console.error("Error:", error); alert("Terjadi kesalahan"); }
   };
 
-  // Open delete confirmation
-  const openDeleteModal = (id) => {
-    setBrandToDelete(id);
-    setDeleteModalOpen(true);
-  };
-
-  // Close delete confirmation
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setBrandToDelete(null);
-  };
-
-  // Confirm delete
+  const openDeleteModal = (id) => { setBrandToDelete(id); setDeleteModalOpen(true); };
+  const closeDeleteModal = () => { setDeleteModalOpen(false); setBrandToDelete(null); };
   const confirmDelete = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `http://localhost:3000/api/master-table/${brandToDelete}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      call();
-      closeDeleteModal();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Gagal menghapus brand");
-    }
+      await axios.delete(`http://localhost:3000/api/master-table/${brandToDelete}`, { headers: { Authorization: `Bearer ${token}` } });
+      call(); closeDeleteModal();
+    } catch (error) { console.error("Error:", error); alert("Gagal menghapus brand"); }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #e2e8f0" }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-800">MASTER BRAND</h2>
+      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>
+          Master Brand
+        </span>
         <button
           onClick={openModal}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm text-sm"
+          className="inline-flex items-center gap-2 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-150"
+          style={{ background: "#2563eb" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#1d4ed8"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#2563eb"; }}
         >
-          <Plus size={18} />
-          Add Brand
+          <Plus size={14} /> Add Brand
         </button>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-blue-600">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                No
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                Brand Name
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider">
-                Action
-              </th>
+          <thead>
+            <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              <th className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-widest w-16" style={{ color: "#64748b" }}>No</th>
+              <th className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>Brand Name</th>
+              <th className="px-6 py-3 text-right text-[11px] font-bold uppercase tracking-widest pr-6" style={{ color: "#64748b" }}>Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {dataBrand && dataBrand.length > 0 ? (
               dataBrand.map((brand, index) => (
-                <tr key={brand.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-gray-900">
-                      {index + 1}
+                <tr
+                  key={brand.id}
+                  className="transition-colors"
+                  style={{ borderBottom: "1px solid #f1f5f9" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#f8fafc"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <td className="px-6 py-3.5">
+                    <span className="text-xs font-mono" style={{ color: "#94a3b8" }}>
+                      {String(index + 1).padStart(2, "0")}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-gray-900">
-                      {brand.name}
-                    </span>
+                  <td className="px-6 py-3.5">
+                    <span className="text-sm font-medium" style={{ color: "#1e293b" }}>{brand.name}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
+                  <td className="px-6 py-3.5">
+                    <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => openEditModal(brand)}
-                        className="inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm transition"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                        style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe" }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#dbeafe"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "#eff6ff"}
                       >
-                        <Edit size={16} />
-                        Edit
+                        <Edit size={12} /> Edit
                       </button>
                       <button
                         onClick={() => openDeleteModal(brand.id)}
-                        className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm transition"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                        style={{ background: "#fee2e2", color: "#ef4444", border: "1px solid #fecaca" }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#fca5a5"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "#fee2e2"}
                       >
-                        <Trash2 size={16} />
-                        Delete
+                        <Trash2 size={12} /> Delete
                       </button>
                     </div>
                   </td>
@@ -168,7 +111,7 @@ function BrandSection({ dataBrand, call }) {
               ))
             ) : (
               <tr>
-                <td colSpan="3" className="px-6 py-8 text-center text-gray-500">
+                <td colSpan="3" className="px-6 py-10 text-center text-sm" style={{ color: "#94a3b8" }}>
                   No brands found
                 </td>
               </tr>
@@ -177,23 +120,8 @@ function BrandSection({ dataBrand, call }) {
         </table>
       </div>
 
-      {/* Modal Form */}
-      <FormTambahBrand
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        formData={formData}
-        onInputChange={handleInputChange}
-        onSubmit={handleSubmit}
-        isEdit={!!editData}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmation
-        isOpen={deleteModalOpen}
-        item="Brand"
-        onConfirm={confirmDelete}
-        onCancel={closeDeleteModal}
-      />
+      <FormTambahBrand isOpen={isModalOpen} onClose={closeModal} formData={formData} onInputChange={handleInputChange} onSubmit={handleSubmit} isEdit={!!editData} />
+      <DeleteConfirmation isOpen={deleteModalOpen} item="Brand" onConfirm={confirmDelete} onCancel={closeDeleteModal} />
     </div>
   );
 }
