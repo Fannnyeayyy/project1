@@ -12,7 +12,7 @@ import DeleteConfirmation from "../components/DeleteConfirmation";
 import Toast from "../components/Toast";
 import axios from "axios";
 import { ambilSemuaSubBrands, tambahSubBrand, editSubBrand, hapusSubBrand } from "../services/subBrandService";
-import { ambilSemuaProducts, tambahProduct, editProduct, hapusProduct } from "../services/productService";
+import { ambilSemuaProducts, tambahProduct, editProduct, hapusProduct } from "../services/ProductService";
 
 function MasterTable() {
   const [sidebarOpen, setSidebarOpen] = useState(true);

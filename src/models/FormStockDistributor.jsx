@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" };
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
@@ -88,10 +89,12 @@ function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, e
           </div>
           <div>
             <label style={labelStyle}>Product</label>
-            <select name="productId" value={form.productId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
-              <option value="">Pilih Product</option>
-              {filteredProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <SearchableDropdown
+              options={filteredProducts.map(p => ({ value: p.id, label: p.name }))}
+              value={form.productId}
+              onChange={val => setForm(prev => ({ ...prev, productId: val }))}
+              placeholder="Pilih Product"
+            />
           </div>
 
           {/* Info harga dari product */}

@@ -23,8 +23,8 @@ const getHarga = async (productId) => {
 // ── LEADTIME DELIVERY ─────────────────────────────────────────────────────────
 const findAllLeadtime = async ({ brandId, subBrandId } = {}) => {
   const where = {};
-  if (brandId)    where.brandId    = brandId;
-  if (subBrandId) where.subBrandId = subBrandId;
+  if (brandId)    where.brandId    = parseInt(brandId);
+  if (subBrandId) where.subBrandId = parseInt(subBrandId);
   return LeadtimeDelivery.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['createdAt', 'DESC']] });
 };
 const createLeadtime = async (data) => LeadtimeDelivery.create(data);
@@ -34,8 +34,8 @@ const deleteLeadtime = async (id) => LeadtimeDelivery.destroy({ where: { id } })
 // ── STOCK INDOMARET ───────────────────────────────────────────────────────────
 const findAllStockIndomaret = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
-  if (brandId)    where.brandId    = brandId;
-  if (subBrandId) where.subBrandId = subBrandId;
+  if (brandId)    where.brandId    = parseInt(brandId);
+  if (subBrandId) where.subBrandId = parseInt(subBrandId);
   if (periodDate) where.periodDate = periodDate;
   return StockIndomaret.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['createdAt', 'DESC']] });
 };
@@ -58,8 +58,8 @@ const deleteStockIndomaret = async (id) => StockIndomaret.destroy({ where: { id 
 // ── SERVICE LEVEL PERFORMANCE ─────────────────────────────────────────────────
 const findAllServiceLevel = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
-  if (brandId)    where.brandId    = brandId;
-  if (subBrandId) where.subBrandId = subBrandId;
+  if (brandId)    where.brandId    = parseInt(brandId);
+  if (subBrandId) where.subBrandId = parseInt(subBrandId);
   if (periodDate) where.periodDate = periodDate;
   return ServiceLevelPerformance.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['salesRank', 'ASC']] });
 };
@@ -71,15 +71,44 @@ const getTotalSalesPerBrand = async () => {
     order: [[fn('SUM', col('totalSales')), 'DESC']]
   });
 };
-const createServiceLevel  = async (data) => ServiceLevelPerformance.create(data);
-const updateServiceLevel  = async (id, data) => { const r = await ServiceLevelPerformance.findByPk(id); return r ? r.update(data) : null; };
+// Auto-calculate loseSales, performance, rank, performanceCategory
+const calcServiceLevel = (data) => {
+  const total  = parseInt(data.totalSales) || 0;
+  const actual = parseInt(data.actualSales) || 0;
+  const lose   = total - actual;
+  const perf   = total > 0 ? parseFloat(((actual / total) * 100).toFixed(2)) : 0;
+  let category = 'Below Average';
+  if (perf >= 95) category = 'Excellent';
+  else if (perf >= 85) category = 'Good';
+  else if (perf >= 70) category = 'Average';
+  return { ...data, loseSales: lose, performance: perf, performanceCategory: category };
+};
+
+// Recalculate rank untuk semua records berdasarkan actualSales DESC
+const recalcRanks = async () => {
+  const all = await ServiceLevelPerformance.findAll({ order: [['actualSales', 'DESC']] });
+  for (let i = 0; i < all.length; i++) {
+    await all[i].update({ salesRank: i + 1 });
+  }
+};
+
+const createServiceLevel = async (data) => {
+  const r = await ServiceLevelPerformance.create(calcServiceLevel(data));
+  await recalcRanks();
+  return r;
+};
+const updateServiceLevel = async (id, data) => {
+  const r = await ServiceLevelPerformance.findByPk(id);
+  if (r) { await r.update(calcServiceLevel(data)); await recalcRanks(); }
+  return r;
+};
 const deleteServiceLevel  = async (id) => ServiceLevelPerformance.destroy({ where: { id } });
 
 // ── STOCK DISTRIBUTOR ─────────────────────────────────────────────────────────
 const findAllStockDistributor = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
-  if (brandId)    where.brandId    = brandId;
-  if (subBrandId) where.subBrandId = subBrandId;
+  if (brandId)    where.brandId    = parseInt(brandId);
+  if (subBrandId) where.subBrandId = parseInt(subBrandId);
   if (periodDate) where.periodDate = periodDate;
   return StockDistributor.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['lastUpdated', 'DESC']] });
 };
@@ -101,7 +130,7 @@ const deleteStockDistributor = async (id) => StockDistributor.destroy({ where: {
 // ── FORECAST ──────────────────────────────────────────────────────────────────
 const findAllForecast = async ({ brandId, periodDate } = {}) => {
   const where = {};
-  if (brandId)    where.brandId    = brandId;
+  if (brandId)    where.brandId    = parseInt(brandId);
   if (periodDate) where.periodDate = periodDate;
   return Forecast.findAll({ where, include: [includeBrand], order: [['periodDate', 'DESC']] });
 };

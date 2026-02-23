@@ -27,6 +27,11 @@ function Badge({ value }) {
     Good:            { bg: "#d1fae5", color: "#10b981", label: "Good" },
     Average:         { bg: "#fef3c7", color: "#f59e0b", label: "Average" },
     "Below Average": { bg: "#fee2e2", color: "#ef4444", label: "Below Average" },
+    Pending:         { bg: "#f1f5f9", color: "#64748b", label: "Pending" },
+    "In Transit":    { bg: "#dbeafe", color: "#2563eb", label: "In Transit" },
+    Delivered:       { bg: "#d1fae5", color: "#10b981", label: "Delivered" },
+    Delayed:         { bg: "#fee2e2", color: "#ef4444", label: "Delayed" },
+    Cancelled:       { bg: "#f3f4f6", color: "#6b7280", label: "Cancelled" },
   };
   const s = map[String(value)] || { bg: "#f1f5f9", color: "#64748b", label: String(value) };
   return <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>;
@@ -39,9 +44,13 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
 
   useEffect(() => { setPage(1); }, [data]);
 
-  const filtered = data.filter(row =>
-    columns.some(col => String(row[col.key] ?? "").toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = data.filter(row => {
+    const q = search.toLowerCase();
+    const flatMatch = columns.some(col => String(row[col.key] ?? "").toLowerCase().includes(q));
+    const nestedMatch = [row.brand?.name, row.sub_brand?.name, row.product?.name]
+      .some(val => val && String(val).toLowerCase().includes(q));
+    return flatMatch || nestedMatch;
+  });
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
@@ -224,14 +233,15 @@ function Detail() {
         { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
         { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
         { key: "product", label: "Product", render: (_, r) => r.product?.name ?? "—" },
-        { key: "qtyOrder", label: "Qty Order" },
+        { key: "qtyOrder", label: "Qty Order (Karton)" },
+        { key: "tanggalKeluarPabrik", label: "Tgl Keluar Pabrik", render: v => v ?? "—" },
         { key: "eta", label: "ETA" },
         { key: "status", label: "Status", render: v => <Badge value={v} /> },
-        { key: "actualArrivalDate", label: "Actual Arrival", render: v => v ? new Date(v).toLocaleDateString("id-ID") : "—" },
+        { key: "notes", label: "Notes", render: v => v ?? "—" },
       ]
     },
     {
-      key: "stock_indomaret", label: "Stock Indomaret", icon: ShoppingBag, color: "#10b981", bg: "#d1fae5",
+      key: "stock_delivery", label: "Stock Delivery", icon: ShoppingBag, color: "#10b981", bg: "#d1fae5",
       data: stockIndomaret, onAdd: () => openAdd("stockIndomaret"), onEdit: r => openEdit("stockIndomaret", r), onDelete: id => openDelete("stockIndomaret", id),
       columns: [
         { key: "id", label: "ID" },
@@ -249,13 +259,14 @@ function Detail() {
       columns: [
         { key: "id", label: "ID" },
         { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
+        { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
         { key: "product", label: "Product", render: (_, r) => r.product?.name ?? "—" },
-        { key: "totalSales", label: "Total Sales", render: v => `Rp ${Number(v).toLocaleString("id-ID")}` },
-        { key: "salesQuantity", label: "Sales Qty" },
+        { key: "totalSales", label: "Total Sales", render: (v, r) => `Rp ${(Number(v) * Number(r.product?.hargaPerCarton || 0)).toLocaleString("id-ID")}` },
+        { key: "actualSales", label: "Actual Sales", render: (v, r) => `Rp ${(Number(v) * Number(r.product?.hargaPerCarton || 0)).toLocaleString("id-ID")}` },
+        { key: "loseSales", label: "Lose Sales", render: (v, r) => { const val = Number(v) * Number(r.product?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{`Rp ${val.toLocaleString("id-ID")}`}</span>; } },
+        { key: "performance", label: "Performance (%)", render: v => v ? `${v}%` : "—" },
+        { key: "performanceCategory", label: "Category", render: v => <Badge value={v} /> },
         { key: "salesRank", label: "Rank" },
-        { key: "performanceCategory", label: "Performance", render: v => <Badge value={v} /> },
-        { key: "percentageOfTotal", label: "% Total", render: v => v ? `${v}%` : "—" },
-        { key: "periodDate", label: "Period" },
       ]
     },
     {
@@ -378,7 +389,7 @@ function Detail() {
 
       {/* Modals */}
       <FormLeadtime isOpen={formOpen.leadtime} onClose={() => closeForm("leadtime")} onSubmit={makeSubmit("leadtime", tambahLeadtime, editLeadtime, "Leadtime")} onError={(msg) => showToast("error", msg)} editData={editData.leadtime} brands={brands} subBrands={subBrands} products={products} />
-      <FormStockIndomaret isOpen={formOpen.stockIndomaret} onClose={() => closeForm("stockIndomaret")} onSubmit={makeSubmit("stockIndomaret", tambahStockIndomaret, editStockIndomaret, "Stock Indomaret")} onError={(msg) => showToast("error", msg)} editData={editData.stockIndomaret} brands={brands} subBrands={subBrands} products={products} />
+      <FormStockIndomaret isOpen={formOpen.stockIndomaret} onClose={() => closeForm("stockIndomaret")} onSubmit={makeSubmit("stockIndomaret", tambahStockIndomaret, editStockIndomaret, "Stock Delivery")} onError={(msg) => showToast("error", msg)} editData={editData.stockIndomaret} brands={brands} subBrands={subBrands} products={products} />
       <FormServiceLevel isOpen={formOpen.serviceLevel} onClose={() => closeForm("serviceLevel")} onSubmit={makeSubmit("serviceLevel", tambahServiceLevel, editServiceLevel, "Service Level")} onError={(msg) => showToast("error", msg)} editData={editData.serviceLevel} brands={brands} subBrands={subBrands} products={products} />
       <FormStockDistributor isOpen={formOpen.stockDistributor} onClose={() => closeForm("stockDistributor")} onSubmit={makeSubmit("stockDistributor", tambahStockDistributor, editStockDistributor, "Stock Distributor")} onError={(msg) => showToast("error", msg)} editData={editData.stockDistributor} brands={brands} subBrands={subBrands} products={products} />
       <FormForecast isOpen={formOpen.forecast} onClose={() => closeForm("forecast")} onSubmit={makeSubmit("forecast", tambahForecast, editForecast, "Forecast")} onError={(msg) => showToast("error", msg)} editData={editData.forecast} brands={brands} />

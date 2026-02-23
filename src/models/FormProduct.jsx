@@ -38,7 +38,7 @@ function FormProduct({ isOpen, onClose, onSubmit, onError = () => {}, subBrands,
     return searchSubBrand ? byBrand?.filter(sb => sb.name.toLowerCase().includes(searchSubBrand.toLowerCase())) : byBrand;
   }, [subBrands, formData.brandId, searchSubBrand]);
 
-  const formatRupiah = (val) => val.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const formatRupiah = (val) => String(val || "").replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const parseRupiah  = (val) => val.replace(/\./g, "");
 
   const handleChange = (e) => {

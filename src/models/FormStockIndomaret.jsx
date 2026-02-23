@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" };
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
@@ -65,7 +66,7 @@ function FormStockIndomaret({ isOpen, onClose, onSubmit, onError = () => {}, edi
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.5)" }}>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: "1px solid #e2e8f0" }}>
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
-          <span className="text-sm font-bold" style={{ color: "#1e293b" }}>{editData ? "Edit Stock Indomaret" : "Tambah Stock Indomaret"}</span>
+          <span className="text-sm font-bold" style={{ color: "#1e293b" }}>{editData ? "Edit Stock Delivery" : "Tambah Stock Delivery"}</span>
           <button onClick={onClose} style={{ color: "#94a3b8" }}><X size={18} /></button>
         </div>
 
@@ -86,10 +87,12 @@ function FormStockIndomaret({ isOpen, onClose, onSubmit, onError = () => {}, edi
           </div>
           <div>
             <label style={labelStyle}>Product</label>
-            <select name="productId" value={form.productId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
-              <option value="">Pilih Product</option>
-              {filteredProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <SearchableDropdown
+              options={filteredProducts.map(p => ({ value: p.id, label: p.name }))}
+              value={form.productId}
+              onChange={val => setForm(prev => ({ ...prev, productId: val }))}
+              placeholder="Pilih Product"
+            />
           </div>
 
           {/* Info harga dari product */}

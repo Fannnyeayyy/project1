@@ -22,8 +22,9 @@ const LeadtimeDelivery = sequelize.define('leadtime_delivery', {
   productId:  { type: DataTypes.INTEGER, allowNull: false, references: { model: Product, key: 'id' } },
   qtyOrder:   { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   eta:        { type: DataTypes.DATEONLY, allowNull: false },
-  status:     { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-  actualArrivalDate: { type: DataTypes.DATE, allowNull: true }
+  status:     { type: DataTypes.ENUM('Pending', 'In Transit', 'Delivered', 'Delayed', 'Cancelled'), allowNull: false, defaultValue: 'Pending' },
+  tanggalKeluarPabrik: { type: DataTypes.DATEONLY, allowNull: true },
+  notes:      { type: DataTypes.TEXT, allowNull: true }
 }, defaultOptions);
 
 // ── STOCK INDOMARET ───────────────────────────────────────────────────────────
@@ -42,12 +43,12 @@ const ServiceLevelPerformance = sequelize.define('service_level_performance', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
   productId:  { type: DataTypes.INTEGER, allowNull: false, references: { model: Product, key: 'id' } },
-  totalSales:    { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
-  salesQuantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-  salesRank:     { type: DataTypes.INTEGER, allowNull: true },
-  performanceCategory: { type: DataTypes.ENUM('Excellent', 'Good', 'Average', 'Below Average'), allowNull: true },
-  percentageOfTotal: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
-  periodDate: { type: DataTypes.DATEONLY, allowNull: false }
+  totalSales:    { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }, // qty diminta Indomaret
+  actualSales:   { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }, // qty dipenuhi distributor
+  loseSales:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: totalSales - actualSales
+  salesRank:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: rank by actualSales
+  performance:   { type: DataTypes.DECIMAL(5, 2), allowNull: true },             // auto: actualSales/totalSales * 100
+  performanceCategory: { type: DataTypes.ENUM('Excellent', 'Good', 'Average', 'Below Average'), allowNull: true }, // auto
 }, defaultOptions);
 
 // ── STOCK DISTRIBUTOR ─────────────────────────────────────────────────────────
@@ -63,7 +64,6 @@ const StockDistributor = sequelize.define('stock_distributor', {
 }, defaultOptions);
 
 // ── FORECAST ──────────────────────────────────────────────────────────────────
-// Baru: menggantikan data hardcoded di dashboard frontend
 const Forecast = sequelize.define('forecast', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   plan:       { type: DataTypes.STRING, allowNull: false },       // contoh: "Mei 1,5 m"
