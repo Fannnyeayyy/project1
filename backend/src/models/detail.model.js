@@ -15,7 +15,7 @@ const { Brand, SubBrand, Product } = require('./master-table.model');
 
 const defaultOptions = { paranoid: true };
 
-// ── LEADTIME DELIVERY ─────────────────────────────────────────────────────────
+// ── LEADTIME DELIVERY
 const LeadtimeDelivery = sequelize.define('leadtime_delivery', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
@@ -27,7 +27,7 @@ const LeadtimeDelivery = sequelize.define('leadtime_delivery', {
   notes:      { type: DataTypes.TEXT, allowNull: true }
 }, defaultOptions);
 
-// ── STOCK INDOMARET ───────────────────────────────────────────────────────────
+// ── STOCK INDOMARET
 const StockIndomaret = sequelize.define('stock_indomaret', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
@@ -38,7 +38,7 @@ const StockIndomaret = sequelize.define('stock_indomaret', {
   periodDate: { type: DataTypes.DATEONLY, allowNull: true }
 }, defaultOptions);
 
-// ── SERVICE LEVEL PERFORMANCE ─────────────────────────────────────────────────
+// ── SERVICE LEVEL PERFORMANCE
 const ServiceLevelPerformance = sequelize.define('service_level_performance', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
@@ -48,10 +48,10 @@ const ServiceLevelPerformance = sequelize.define('service_level_performance', {
   loseSales:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: totalSales - actualSales
   salesRank:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: rank by actualSales
   performance:   { type: DataTypes.DECIMAL(5, 2), allowNull: true },             // auto: actualSales/totalSales * 100
-  performanceCategory: { type: DataTypes.ENUM('Excellent', 'Good', 'Average', 'Below Average'), allowNull: true }, // auto
+  periodDate: { type: DataTypes.DATEONLY, allowNull: true }
 }, defaultOptions);
 
-// ── STOCK DISTRIBUTOR ─────────────────────────────────────────────────────────
+// ── STOCK DISTRIBUTOR 
 const StockDistributor = sequelize.define('stock_distributor', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
@@ -63,7 +63,7 @@ const StockDistributor = sequelize.define('stock_distributor', {
   periodDate:  { type: DataTypes.DATEONLY, allowNull: true }
 }, defaultOptions);
 
-// ── FORECAST ──────────────────────────────────────────────────────────────────
+// ── FORECAST 
 const Forecast = sequelize.define('forecast', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   plan:       { type: DataTypes.STRING, allowNull: false },       // contoh: "Mei 1,5 m"
@@ -74,7 +74,7 @@ const Forecast = sequelize.define('forecast', {
   periodDate: { type: DataTypes.DATEONLY, allowNull: false }      // misal: 2025-05-01
 }, defaultOptions);
 
-// ── RELASI ────────────────────────────────────────────────────────────────────
+// ── RELASI 
 [LeadtimeDelivery, StockIndomaret, ServiceLevelPerformance, StockDistributor].forEach(Model => {
   Brand.hasMany(Model, { foreignKey: 'brandId', onDelete: 'CASCADE' });
   Model.belongsTo(Brand, { foreignKey: 'brandId' });

@@ -74,8 +74,8 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
           <table className="w-full">
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                {columns.map(col => (
-                  <th key={col.key} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>{col.label}</th>
+                {columns.map((col, idx) => (
+                  <th key={`${col.key}-${idx}`} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>{col.label}</th>
                 ))}
                 <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>Aksi</th>
               </tr>
@@ -85,8 +85,8 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
                 <tr key={row.id ?? i} style={{ borderBottom: "1px solid #f1f5f9" }}
                   onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  {columns.map(col => (
-                    <td key={col.key} className="px-5 py-3.5 text-sm whitespace-nowrap">
+                  {columns.map((col, idx) => (
+                    <td key={`${col.key}-${idx}`} className="px-5 py-3.5 text-sm whitespace-nowrap">
                       {col.render ? col.render(row[col.key], row) : (
                         col.key === "id"
                           ? <span className="text-xs font-mono" style={{ color: "#94a3b8" }}>{String(row[col.key]).padStart(2, "0")}</span>
@@ -258,14 +258,14 @@ function Detail() {
       data: serviceLevel, onAdd: () => openAdd("serviceLevel"), onEdit: r => openEdit("serviceLevel", r), onDelete: id => openDelete("serviceLevel", id),
       columns: [
         { key: "id", label: "ID" },
-        { key: "brand", label: "Brand", render: (_, r) => r.brand?.name ?? "—" },
-        { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
-        { key: "product", label: "Product", render: (_, r) => r.product?.name ?? "—" },
-        { key: "totalSales", label: "Total Sales", render: (v, r) => `Rp ${(Number(v) * Number(r.product?.hargaPerCarton || 0)).toLocaleString("id-ID")}` },
-        { key: "actualSales", label: "Actual Sales", render: (v, r) => `Rp ${(Number(v) * Number(r.product?.hargaPerCarton || 0)).toLocaleString("id-ID")}` },
-        { key: "loseSales", label: "Lose Sales", render: (v, r) => { const val = Number(v) * Number(r.product?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{`Rp ${val.toLocaleString("id-ID")}`}</span>; } },
+        { key: "brand", label: "Brand", render: (_, r) => (r.Brand || r.brand)?.name ?? "—" },
+        { key: "sub_brand", label: "Sub Brand", render: (_, r) => (r.SubBrand || r.sub_brand)?.name ?? "—" },
+        { key: "product", label: "Product", render: (_, r) => (r.Product || r.product)?.name ?? "—" },
+        { key: "periodDate", label: "Period", render: v => v ? new Date(v).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+        { key: "totalSales", label: "Total Sales", render: (v, r) => { const p = r.Product || r.product; return `Rp ${(Number(v) * Number(p?.hargaPerCarton || 0)).toLocaleString("id-ID")}`; } },
+        { key: "actualSales", label: "Actual Sales", render: (v, r) => { const p = r.Product || r.product; return `Rp ${(Number(v) * Number(p?.hargaPerCarton || 0)).toLocaleString("id-ID")}`; } },
+        { key: "loseSales", label: "Lose Sales", render: (v, r) => { const p = r.Product || r.product; const val = Number(v) * Number(p?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{`Rp ${val.toLocaleString("id-ID")}`}</span>; } },
         { key: "performance", label: "Performance (%)", render: v => v ? `${v}%` : "—" },
-        { key: "performanceCategory", label: "Category", render: v => <Badge value={v} /> },
         { key: "salesRank", label: "Rank" },
       ]
     },

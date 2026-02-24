@@ -71,17 +71,13 @@ const getTotalSalesPerBrand = async () => {
     order: [[fn('SUM', col('totalSales')), 'DESC']]
   });
 };
-// Auto-calculate loseSales, performance, rank, performanceCategory
+// Auto-calculate loseSales, performance, rank
 const calcServiceLevel = (data) => {
   const total  = parseInt(data.totalSales) || 0;
   const actual = parseInt(data.actualSales) || 0;
   const lose   = total - actual;
   const perf   = total > 0 ? parseFloat(((actual / total) * 100).toFixed(2)) : 0;
-  let category = 'Below Average';
-  if (perf >= 95) category = 'Excellent';
-  else if (perf >= 85) category = 'Good';
-  else if (perf >= 70) category = 'Average';
-  return { ...data, loseSales: lose, performance: perf, performanceCategory: category };
+  return { ...data, loseSales: lose, performance: perf };
 };
 
 // Recalculate rank untuk semua records berdasarkan actualSales DESC
