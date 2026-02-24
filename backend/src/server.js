@@ -14,7 +14,7 @@ require('./models/detail.model');
 
 const PORT = process.env.PORT || 3000;
 
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ alter: false }).then(() => {
   console.log('[DB] Database synced');
   app.listen(PORT, () => {
     console.log(`[SERVER] Running at http://localhost:${PORT}`);

@@ -30,7 +30,8 @@ export default function Dashboard() {
   const [serviceLevel, setServiceLevel] = useState([]);
 
   // State Forecast
-  const [forecastData, setForecastData] = useState(null);
+  const [forecastList, setForecastList] = useState([]);
+  const [forecastIndex, setForecastIndex] = useState(0);
   const [editForecastData, setEditForecastData] = useState(null);
 
   // State UI
@@ -64,28 +65,24 @@ export default function Dashboard() {
       setSubBrands(sbRes.data || []);
       setLeadtimes(ltRes.data?.data || []);
       setServiceLevel(slList);
-      // DEBUG — hapus setelah fix
-      if (slList.length > 0) {
-        const s = slList[0];
-        console.log("[DEBUG] serviceLevel keys:", Object.keys(s));
-        console.log("[DEBUG] brandId:", s.brandId, "| Brand:", s.Brand, "| Product:", s.Product, "| actualSales:", s.actualSales, "| hargaPerCarton:", s.Product?.hargaPerCarton);
-      }
-      console.log("[DEBUG] brands:", brandList.map(b => ({id: b.id, name: b.name})));
-
       if (brandList.length > 0) setSelectedBrand(brandList[0].name);
 
       if (fcList.length > 0) {
-        const fc = fcList[0];
-        const mapped = {
+        // Urutkan dari terbaru, simpan semua
+        const sorted = [...fcList].sort((a, b) => new Date(b.periodDate || 0) - new Date(a.periodDate || 0));
+        const mapped = sorted.map(fc => ({
           id: fc.id,
+          brandId: fc.brandId,
           plan: fc.plan,
+          periodDate: fc.periodDate,
           week1: Number(fc.week1).toLocaleString("id-ID"),
           week2: Number(fc.week2).toLocaleString("id-ID"),
           week3: Number(fc.week3).toLocaleString("id-ID"),
           week4: Number(fc.week4).toLocaleString("id-ID"),
-        };
-        setForecastData(mapped);
-        setEditForecastData(mapped);
+        }));
+        setForecastList(mapped);
+        setForecastIndex(0);
+        setEditForecastData(mapped[0]);
       }
     } catch (e) {
       console.error("[Dashboard] Critical fetch error:", e);
@@ -147,15 +144,16 @@ export default function Dashboard() {
     try {
       const rawData = {
         ...editForecastData,
-        week1: editForecastData.week1.replace(/\./g, ""),
-        week2: editForecastData.week2.replace(/\./g, ""),
-        week3: editForecastData.week3.replace(/\./g, ""),
-        week4: editForecastData.week4.replace(/\./g, ""),
+        week1: String(editForecastData.week1).replace(/\./g, ""),
+        week2: String(editForecastData.week2).replace(/\./g, ""),
+        week3: String(editForecastData.week3).replace(/\./g, ""),
+        week4: String(editForecastData.week4).replace(/\./g, ""),
       };
       await axios.put(`${BASE}/detail/forecast/${editForecastData.id}`, rawData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setForecastData({ ...editForecastData });
+      // Update list di index sekarang
+      setForecastList(prev => prev.map((fc, i) => i === forecastIndex ? { ...editForecastData } : fc));
       alert("Forecast berhasil diperbarui!");
     } catch (err) {
       console.error("Gagal simpan forecast:", err);
@@ -165,6 +163,13 @@ export default function Dashboard() {
 
   const handleForecastChange = (field, value) =>
     setEditForecastData(prev => ({ ...prev, [field]: value }));
+
+  const handleForecastNav = (dir) => {
+    const newIdx = forecastIndex + dir;
+    if (newIdx < 0 || newIdx >= forecastList.length) return;
+    setForecastIndex(newIdx);
+    setEditForecastData(forecastList[newIdx]);
+  };
 
   return (
     <div className="flex h-screen" style={{ background: "#f1f5f9" }}>
@@ -189,7 +194,7 @@ export default function Dashboard() {
 
           {/* Forecast + Brand Performance */}
           <div className="grid grid-cols-2 gap-5 flex-1 min-h-0">
-            <ForecastCard forecastData={forecastData} editForecastData={editForecastData} onSave={handleSaveForecast} onChange={handleForecastChange} />
+            <ForecastCard forecastData={forecastList[forecastIndex] || null} editForecastData={editForecastData} onSave={handleSaveForecast} onChange={handleForecastChange} forecastIndex={forecastIndex} forecastTotal={forecastList.length} onNav={handleForecastNav} />
             <BrandPerformanceCard brands={brands} selectedBrand={selectedBrand} onSelectBrand={setSelectedBrand} subBrandChart={brandStats.chart} maxChartVal={brandStats.max} totalActualSelected={brandStats.totalActual} totalLoseSelected={brandStats.totalLose} totalLabel={brandStats.totalLabel} fmtM={fmtM} />
           </div>
         </main>
