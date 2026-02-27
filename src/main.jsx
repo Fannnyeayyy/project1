@@ -9,6 +9,7 @@ import UserPage from "./pages/User.jsx";
 import MasterTable from "./pages/MasterTable.jsx";
 import Home from "./pages/Home.jsx";
 import ProtectedAdmin from "./routes/ProtectedAdmin.jsx";
+import ProtectedUser from "./routes/ProtectedUser.jsx";
 import ProtectedAuth from "./routes/ProtectedAuth.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
@@ -24,10 +25,14 @@ createRoot(document.getElementById("root")).render(
           <Route path="/login" element={<Login />} />
         </Route>
 
-        {/* Protected routes — harus login */}
-        <Route element={<ProtectedAdmin />}>
+        {/* Protected routes — semua user yang sudah login */}
+        <Route element={<ProtectedUser />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detail" element={<Detail />} />
+        </Route>
+
+        {/* Admin only routes */}
+        <Route element={<ProtectedAdmin />}>
           <Route path="/user" element={<UserPage />} />
           <Route path="/master-table" element={<MasterTable />} />
         </Route>

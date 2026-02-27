@@ -2,12 +2,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEKS = ["week1", "week2", "week3", "week4"];
 
-const parseNum = (val) => parseInt(String(val || "0").replace(/\./g, "").replace(/,/g, "")) || 0;
+const parseNum = (val) => Number(val) || 0;
 
-const fmtNum = (val) => parseNum(val).toLocaleString("id-ID");
+const fmtRp = (val) => {
+  const num = parseNum(val);
+  return `Rp ${num.toLocaleString("id-ID")}`;
+};
 
-const weekTotal = (data) =>
-  WEEKS.reduce((sum, w) => sum + parseNum(data?.[w]), 0).toLocaleString("id-ID");
+const weekTotal = (data) => {
+  const total = WEEKS.reduce((sum, w) => sum + parseNum(data?.[w]), 0);
+  return fmtRp(total);
+};
 
 const fmtPeriod = (dateStr) => {
   if (!dateStr) return "";
@@ -64,7 +69,7 @@ export default function ForecastCard({
               <div className="text-right">
                 <p className="text-sm font-medium mb-1" style={{ color: "#64748b" }}>Total Forecast</p>
                 <p className="text-2xl font-bold" style={{ color: "#2563eb" }}>
-                  Rp {weekTotal(forecastData)}
+                  {weekTotal(forecastData)}
                 </p>
               </div>
             </div>
@@ -79,7 +84,7 @@ export default function ForecastCard({
                   </p>
                   <p className="text-base font-bold" style={{ color: "#1e293b" }}>
                     <span style={{ color: "#3b82f6" }}>● </span>
-                    Rp {fmtNum(forecastData[w])}
+                    {fmtRp(forecastData[w])}
                   </p>
                 </div>
               ))}
@@ -87,7 +92,7 @@ export default function ForecastCard({
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm" style={{ color: "#94a3b8" }}>Belum ada data forecast</p>
+            <p className="text-sm" style={{ color: "#94a3b8" }}>No forecast data available</p>
           </div>
         )}
       </div>

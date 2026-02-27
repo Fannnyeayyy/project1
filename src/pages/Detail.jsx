@@ -45,7 +45,7 @@ const StatusChip = ({ value }) => {
 const fmtRp   = v => `Rp ${Number(v).toLocaleString("id-ID")}`;
 const fmtDate = v => v ? new Date(v).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—";
 
-function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
+function DataTable({ columns, data, loading, onEdit, onDelete, color, isAdmin = true }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 7;
@@ -67,7 +67,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
       <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid #f1f5f9", background: "#f8fafc" }}>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={13} style={{ color: "#94a3b8" }} />
-          <input type="text" placeholder="Cari data..." value={search}
+          <input type="text" placeholder="Search data..." value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="w-full pl-8 pr-4 py-2 text-sm rounded-lg outline-none"
             style={{ border: "1px solid #e2e8f0", background: "white", color: "#1e293b" }} />
@@ -77,7 +77,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
 
       <div className="overflow-x-auto flex-1">
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-sm" style={{ color: "#94a3b8" }}>Memuat data...</div>
+          <div className="flex items-center justify-center h-40 text-sm" style={{ color: "#94a3b8" }}>Loading data...</div>
         ) : (
           <table className="w-full">
             <thead>
@@ -85,7 +85,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
                 {columns.map((col, idx) => (
                   <th key={`${col.key}-${idx}`} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>{col.label}</th>
                 ))}
-                <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>Aksi</th>
+                <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>{isAdmin ? "Action" : ""}</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +103,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
                     </td>
                   ))}
                   <td className="px-5 py-3.5">
+                    {isAdmin && (
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => onEdit(row)}
                         className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
@@ -119,10 +120,11 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
                         <Trash2 size={12} /> Delete
                       </button>
                     </div>
+                    )}
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={columns.length + 1} className="px-5 py-14 text-center text-sm" style={{ color: "#94a3b8" }}>Tidak ada data</td></tr>
+                <tr><td colSpan={columns.length + 1} className="px-5 py-14 text-center text-sm" style={{ color: "#94a3b8" }}>No data available</td></tr>
               )}
             </tbody>
           </table>
@@ -131,7 +133,7 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color }) {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-3" style={{ borderTop: "1px solid #f1f5f9" }}>
-          <span className="text-xs" style={{ color: "#94a3b8" }}>Halaman <strong style={{ color: "#1e293b" }}>{page}</strong> dari <strong style={{ color: "#1e293b" }}>{totalPages}</strong></span>
+          <span className="text-xs" style={{ color: "#94a3b8" }}>Page <strong style={{ color: "#1e293b" }}>{page}</strong> of <strong style={{ color: "#1e293b" }}>{totalPages}</strong></span>
           <div className="flex gap-1">
             <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1}
               className="w-8 h-8 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
@@ -167,6 +169,7 @@ function Detail() {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterYear, setFilterYear] = useState("");
   const [loading, setLoading] = useState(false);
+  const isAdmin = ((JSON.parse(localStorage.getItem("user") || "{}").role) || "").toLowerCase() === "admin";
 
   const [leadtime, setLeadtime] = useState([]);
   const [stockIndomaret, setStockIndomaret] = useState([]);
@@ -197,25 +200,43 @@ function Detail() {
 
   const fetchAll = async () => {
     setLoading(true);
+    // Hanya filter brand & subBrand di backend, period filter di frontend
     const filters = {};
     if (filterBrand)    filters.brandId    = filterBrand;
     if (filterSubBrand) filters.subBrandId = filterSubBrand;
-    if (filterYear && filterMonth) filters.periodDate = `${filterYear}-${String(filterMonth).padStart(2, "0")}-01`;
-    else if (filterYear) filters.year = filterYear;
 
     const [lt, si, sl, sd, fc] = await Promise.all([
       getLeadtime(filters), getStockIndomaret(filters),
       getServiceLevel(filters), getStockDistributor(filters),
-      getForecast(filterBrand ? { brandId: filterBrand, ...(filters.periodDate ? { periodDate: filters.periodDate } : {}) } : {}),
+      getForecast(filters),
     ]);
-    if (lt.success) setLeadtime(lt.data);
-    if (si.success) setStockIndomaret(si.data);
-    if (sl.success) setServiceLevel(sl.data);
-    if (sd.success) setStockDistributor(sd.data);
-    if (fc.success) setForecast(fc.data);
 
-    const allDates = [...(lt.data||[]),...(si.data||[]),...(sl.data||[]),...(sd.data||[]),...(fc.data||[])]
-      .map(r => r.periodDate).filter(Boolean);
+    // Client-side period filter function
+    const matchPeriod = (dateStr) => {
+      if (!dateStr) return true;
+      if (filterYear && filterMonth) return dateStr.startsWith(`${filterYear}-${String(filterMonth).padStart(2, "0")}`);
+      if (filterYear) return dateStr.startsWith(filterYear);
+      if (filterMonth) return parseInt(dateStr.slice(5, 7)) === parseInt(filterMonth);
+      return true;
+    };
+
+    const ltData = (lt.data || []);
+    const siData = (si.data || []).filter(r => matchPeriod(r.periodDate));
+    const slData = (sl.data || []).filter(r => matchPeriod(r.periodDate));
+    const sdData = (sd.data || []).filter(r => matchPeriod(r.periodDate));
+    const fcData = (fc.data || []).filter(r => matchPeriod(r.periodDate));
+    // Leadtime: filter by eta
+    const ltFiltered = ltData.filter(r => matchPeriod(r.eta || r.tanggalKeluarPabrik));
+
+    setLeadtime(ltFiltered);
+    setStockIndomaret(siData);
+    setServiceLevel(slData);
+    setStockDistributor(sdData);
+    setForecast(fcData);
+
+    // Available years/months dari SEMUA data (tanpa period filter) untuk dropdown
+    const allDates = [...ltData, ...(si.data||[]), ...(sl.data||[]), ...(sd.data||[]), ...(fc.data||[])]
+      .map(r => r.periodDate || r.eta || r.tanggalKeluarPabrik).filter(Boolean);
     setAvailableYears([...new Set(allDates.map(d => d.slice(0,4)))].sort().reverse());
     setAvailableMonths([...new Set(allDates.map(d => parseInt(d.slice(5,7))))].sort((a,b) => a-b));
     setLoading(false);
@@ -240,7 +261,7 @@ function Detail() {
     const { id, type } = deleteModal;
     const fnMap = { leadtime: hapusLeadtime, stockIndomaret: hapusStockIndomaret, serviceLevel: hapusServiceLevel, stockDistributor: hapusStockDistributor, forecast: hapusForecast };
     const result = await fnMap[type](id);
-    if (result.success) { showToast("success", "Data berhasil dihapus!"); fetchAll(); }
+    if (result.success) { showToast("success", "Data deleted successfully!"); fetchAll(); }
     else showToast("error", result.message);
     closeDelete();
   };
@@ -255,7 +276,7 @@ function Detail() {
         { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
         { key: "product",   label: "Product",   render: (_, r) => r.product?.name   ?? "—" },
         { key: "qtyOrder", label: "Qty Order (Karton)" },
-        { key: "tanggalKeluarPabrik", label: "Tgl Keluar Pabrik", render: v => v ?? "—" },
+        { key: "tanggalKeluarPabrik", label: "Factory Release Date", render: v => v ?? "—" },
         { key: "eta", label: "ETA" },
         { key: "status", label: "Status", render: v => <StatusChip value={v} /> },
         { key: "notes", label: "Notes", render: v => v ?? "—" },
@@ -287,6 +308,7 @@ function Detail() {
         { key: "actualSales", label: "Actual Sales", render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
         { key: "loseSales",   label: "Lose Sales",   render: (v, r) => { const p = r.Product || r.product; const val = Number(v) * Number(p?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{fmtRp(val)}</span>; } },
         { key: "performance", label: "Performance (%)", render: v => v ? `${v}%` : "—" },
+        { key: "salesRank",   label: "Rank" },
       ]
     },
     {
@@ -338,22 +360,22 @@ function Detail() {
             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#94a3b8" }}>Filter</span>
             <select value={filterBrand} onChange={e => { setFilterBrand(e.target.value); setFilterSubBrand(""); }}
               className="text-sm px-3 py-2 rounded-lg outline-none" style={{ border: "1px solid #e2e8f0", color: "#1e293b", minWidth: 150 }}>
-              <option value="">Semua Brand</option>
+              <option value="">All Brands</option>
               {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
             <select value={filterSubBrand} onChange={e => setFilterSubBrand(e.target.value)}
               className="text-sm px-3 py-2 rounded-lg outline-none" style={{ border: "1px solid #e2e8f0", color: "#1e293b", minWidth: 150 }}>
-              <option value="">Semua Sub Brand</option>
+              <option value="">All Sub Brands</option>
               {filteredSubBrands.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
             </select>
             <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
               className="text-sm px-3 py-2 rounded-lg outline-none" style={{ border: "1px solid #e2e8f0", color: "#1e293b", minWidth: 130 }}>
-              <option value="">Semua Bulan</option>
+              <option value="">All Months</option>
               {availableMonths.map(m => <option key={m} value={m}>{MONTHS_ID[m - 1]}</option>)}
             </select>
             <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
               className="text-sm px-3 py-2 rounded-lg outline-none" style={{ border: "1px solid #e2e8f0", color: "#1e293b", minWidth: 110 }}>
-              <option value="">Semua Tahun</option>
+              <option value="">All Years</option>
               {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button onClick={resetFilter}
@@ -405,15 +427,17 @@ function Detail() {
                     </button>
                   ))}
                 </div>
+                {isAdmin && (
                 <button onClick={current.onAdd}
                   className="inline-flex items-center gap-2 text-white text-xs font-semibold px-3 py-2 rounded-lg"
                   style={{ background: current.color }}>
-                  <Plus size={13} /> Tambah
+                  <Plus size={13} /> Add
                 </button>
+                )}
               </div>
             </div>
             <DataTable columns={current.columns} data={current.data} loading={loading}
-              onEdit={current.onEdit} onDelete={current.onDelete} color={current.color} />
+              onEdit={current.onEdit} onDelete={current.onDelete} color={current.color} isAdmin={isAdmin} />
           </div>
         </main>
       </div>

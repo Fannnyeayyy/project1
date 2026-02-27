@@ -74,7 +74,7 @@ export default function Dashboard() {
       setServiceLevel(slList);
       if (brandList.length > 0) setSelectedBrand(brandList[0].name);
 
-      // Extract available months dari data yang ada (service level, leadtime, forecast)
+      // Extract available months dari data yang ada
       const allDates = [
         ...slList.map(r => r.periodDate),
         ...ltList.map(r => r.eta || r.tanggalKeluarPabrik),
@@ -85,17 +85,25 @@ export default function Dashboard() {
       setSelectedMonth(uniqueMonths[0] || "");
 
       if (fcList.length > 0) {
-        const sorted = [...fcList].sort((a, b) => new Date(b.periodDate || 0) - new Date(a.periodDate || 0));
-        const mapped = sorted.map(fc => ({
-          id: fc.id,
-          brandId: fc.brandId,
-          plan: fc.plan,
-          periodDate: fc.periodDate,
-          week1: Number(fc.week1).toLocaleString("id-ID"),
-          week2: Number(fc.week2).toLocaleString("id-ID"),
-          week3: Number(fc.week3).toLocaleString("id-ID"),
-          week4: Number(fc.week4).toLocaleString("id-ID"),
-        }));
+        // Aggregate forecast per bulan (sum semua product dalam bulan yang sama)
+        const byMonth = {};
+        fcList.forEach(fc => {
+          const month = fc.periodDate?.slice(0, 7) || "unknown";
+          if (!byMonth[month]) byMonth[month] = { periodDate: fc.periodDate, week1: 0, week2: 0, week3: 0, week4: 0 };
+          byMonth[month].week1 += Number(fc.week1) || 0;
+          byMonth[month].week2 += Number(fc.week2) || 0;
+          byMonth[month].week3 += Number(fc.week3) || 0;
+          byMonth[month].week4 += Number(fc.week4) || 0;
+        });
+        const mapped = Object.values(byMonth)
+          .sort((a, b) => new Date(b.periodDate || 0) - new Date(a.periodDate || 0))
+          .map(fc => ({
+            periodDate: fc.periodDate,
+            week1: fc.week1,
+            week2: fc.week2,
+            week3: fc.week3,
+            week4: fc.week4,
+          }));
         setForecastList(mapped);
         setForecastIndex(0);
       }
@@ -108,7 +116,7 @@ export default function Dashboard() {
 
   // Format label bulan untuk dropdown
   const fmtMonthLabel = (ym) => {
-    if (!ym) return "Semua Periode";
+    if (!ym) return "All Periods";
     const [year, month] = ym.split("-");
     return `${MONTHS_ID[parseInt(month) - 1]} ${year}`;
   };
@@ -198,7 +206,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#1e293b" }}>Dashboard</h1>
-              <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Selamat datang kembali, Admin</p>
+              <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Welcome back, Admin</p>
             </div>
 
              
@@ -210,7 +218,7 @@ export default function Dashboard() {
                 className="text-sm font-semibold outline-none bg-transparent pr-1"
                 style={{ color: "#1e293b", cursor: "pointer" }}
               >
-                <option value="">Semua Periode</option>
+                <option value="">All Periods</option>
                 {availableMonths.map(m => (
                   <option key={m} value={m}>{fmtMonthLabel(m)}</option>
                 ))}

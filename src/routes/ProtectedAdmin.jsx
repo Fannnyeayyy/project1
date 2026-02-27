@@ -9,7 +9,7 @@ export default function ProtectedAdmin() {
   if (!token) {
     return <Navigate to="/login" replace />;
   } else if (!admin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

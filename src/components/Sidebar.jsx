@@ -5,16 +5,20 @@ import indomaret from "../assets/Logo_Indomaret.png";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = (user.role || "").toLowerCase() === "admin";
 
-  const menuItems = [
+  const allMenuItems = [
     { name: "Dashboard", path: "/dashboard", icon: Home, section: "Main" },
     { name: "Detail", path: "/detail", icon: FileText, section: "Main" },
-    { name: "Master Table", path: "/master-table", icon: Table2, section: "Main" },
+    { name: "Master Table", path: "/master-table", icon: Table2, section: "Admin" },
     { name: "User", path: "/user", icon: User, section: "Admin" },
   ];
 
+  const menuItems = isAdmin ? allMenuItems : allMenuItems.filter(m => m.section !== "Admin");
+
   const isActive = (path) => location.pathname === path;
-  const sections = ["Main", "Admin"];
+  const sections = isAdmin ? ["Main", "Admin"] : ["Main"];
 
   return (
     <aside
