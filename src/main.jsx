@@ -16,17 +16,23 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
+        {/* Landing page — public */}
         <Route path="/" element={<Home />} />
+
+        {/* Login — hanya kalau belum login */}
         <Route element={<ProtectedAuth />}>
           <Route path="/login" element={<Login />} />
         </Route>
+
+        {/* Protected routes — harus login */}
         <Route element={<ProtectedAdmin />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detail" element={<Detail />} />
           <Route path="/user" element={<UserPage />} />
           <Route path="/master-table" element={<MasterTable />} />
         </Route>
-        {/* Not Found Route */}
+
+        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

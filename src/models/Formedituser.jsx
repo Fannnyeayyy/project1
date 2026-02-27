@@ -91,13 +91,6 @@ function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
           {/* Buttons */}
           <div className="flex gap-4 pt-3">
             <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-base transition"
-            >
-              Batal
-            </button>
-            <button
               type="submit"
               className="flex-1 px-4 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg text-base"
             >

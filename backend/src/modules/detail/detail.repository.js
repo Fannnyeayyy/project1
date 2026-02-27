@@ -1,10 +1,6 @@
 /**
  * detail.repository.js
  * Layer akses database untuk semua tabel detail.
- *
- * Auto-kalkulasi totalValue:
- * - StockDistributor & StockIndomaret: totalValue = stockQuantity/avgL3m × hargaPerCarton
- *   Data hargaPerCarton diambil dari tabel Product saat create/update.
  */
 const { LeadtimeDelivery, StockIndomaret, ServiceLevelPerformance, StockDistributor, Forecast } = require('../../models/detail.model');
 const { Brand, SubBrand, Product } = require('../../models/master-table.model');
@@ -14,13 +10,12 @@ const includeBrand    = { model: Brand,    attributes: ['id', 'name'] };
 const includeSubBrand = { model: SubBrand, attributes: ['id', 'name'] };
 const includeProduct  = { model: Product,  attributes: ['id', 'name', 'hargaPerCarton', 'qtyPerCarton'] };
 
-// Helper: ambil hargaPerCarton dari product
 const getHarga = async (productId) => {
   const p = await Product.findByPk(productId);
   return p ? parseFloat(p.hargaPerCarton) : 0;
 };
 
-// ── LEADTIME DELIVERY ─────────────────────────────────────────────────────────
+// ── LEADTIME DELIVERY
 const findAllLeadtime = async ({ brandId, subBrandId } = {}) => {
   const where = {};
   if (brandId)    where.brandId    = parseInt(brandId);
@@ -31,7 +26,7 @@ const createLeadtime = async (data) => LeadtimeDelivery.create(data);
 const updateLeadtime = async (id, data) => { const r = await LeadtimeDelivery.findByPk(id); return r ? r.update(data) : null; };
 const deleteLeadtime = async (id) => LeadtimeDelivery.destroy({ where: { id } });
 
-// ── STOCK INDOMARET ───────────────────────────────────────────────────────────
+// ── STOCK INDOMARET
 const findAllStockIndomaret = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
   if (brandId)    where.brandId    = parseInt(brandId);
@@ -40,7 +35,6 @@ const findAllStockIndomaret = async ({ brandId, subBrandId, periodDate } = {}) =
   return StockIndomaret.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['createdAt', 'DESC']] });
 };
 const createStockIndomaret = async (data) => {
-  // Auto-kalkulasi totalValue = avgL3m × hargaPerCarton
   const harga = await getHarga(data.productId);
   data.totalValue = (parseInt(data.avgL3m) || 0) * harga;
   return StockIndomaret.create(data);
@@ -48,20 +42,19 @@ const createStockIndomaret = async (data) => {
 const updateStockIndomaret = async (id, data) => {
   const r = await StockIndomaret.findByPk(id);
   if (!r) return null;
-  // Recalculate jika avgL3m atau productId berubah
   const harga = await getHarga(data.productId || r.productId);
   data.totalValue = (parseInt(data.avgL3m ?? r.avgL3m) || 0) * harga;
   return r.update(data);
 };
 const deleteStockIndomaret = async (id) => StockIndomaret.destroy({ where: { id } });
 
-// ── SERVICE LEVEL PERFORMANCE ─────────────────────────────────────────────────
+// ── SERVICE LEVEL PERFORMANCE
 const findAllServiceLevel = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
   if (brandId)    where.brandId    = parseInt(brandId);
   if (subBrandId) where.subBrandId = parseInt(subBrandId);
   if (periodDate) where.periodDate = periodDate;
-  return ServiceLevelPerformance.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['salesRank', 'ASC']] });
+  return ServiceLevelPerformance.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['createdAt', 'DESC']] });
 };
 const getTotalSalesPerBrand = async () => {
   return ServiceLevelPerformance.findAll({
@@ -71,36 +64,16 @@ const getTotalSalesPerBrand = async () => {
     order: [[fn('SUM', col('totalSales')), 'DESC']]
   });
 };
-// Auto-calculate loseSales, performance, rank
 const calcServiceLevel = (data) => {
   const total  = parseInt(data.totalSales) || 0;
   const actual = parseInt(data.actualSales) || 0;
-  const lose   = total - actual;
-  const perf   = total > 0 ? parseFloat(((actual / total) * 100).toFixed(2)) : 0;
-  return { ...data, loseSales: lose, performance: perf };
+  return { ...data, loseSales: total - actual, performance: total > 0 ? parseFloat(((actual / total) * 100).toFixed(2)) : 0 };
 };
-
-// Recalculate rank untuk semua records berdasarkan actualSales DESC
-const recalcRanks = async () => {
-  const all = await ServiceLevelPerformance.findAll({ order: [['actualSales', 'DESC']] });
-  for (let i = 0; i < all.length; i++) {
-    await all[i].update({ salesRank: i + 1 });
-  }
-};
-
-const createServiceLevel = async (data) => {
-  const r = await ServiceLevelPerformance.create(calcServiceLevel(data));
-  await recalcRanks();
-  return r;
-};
-const updateServiceLevel = async (id, data) => {
-  const r = await ServiceLevelPerformance.findByPk(id);
-  if (r) { await r.update(calcServiceLevel(data)); await recalcRanks(); }
-  return r;
-};
+const createServiceLevel = async (data) => { return ServiceLevelPerformance.create(calcServiceLevel(data)); };
+const updateServiceLevel = async (id, data) => { const r = await ServiceLevelPerformance.findByPk(id); if (r) { await r.update(calcServiceLevel(data)); } return r; };
 const deleteServiceLevel  = async (id) => ServiceLevelPerformance.destroy({ where: { id } });
 
-// ── STOCK DISTRIBUTOR ─────────────────────────────────────────────────────────
+// ── STOCK DISTRIBUTOR
 const findAllStockDistributor = async ({ brandId, subBrandId, periodDate } = {}) => {
   const where = {};
   if (brandId)    where.brandId    = parseInt(brandId);
@@ -109,7 +82,6 @@ const findAllStockDistributor = async ({ brandId, subBrandId, periodDate } = {})
   return StockDistributor.findAll({ where, include: [includeBrand, includeSubBrand, includeProduct], order: [['lastUpdated', 'DESC']] });
 };
 const createStockDistributor = async (data) => {
-  // Auto-kalkulasi totalValue = stockQuantity × hargaPerCarton
   const harga = await getHarga(data.productId);
   data.totalValue = (parseInt(data.stockQuantity) || 0) * harga;
   return StockDistributor.create(data);
@@ -123,17 +95,26 @@ const updateStockDistributor = async (id, data) => {
 };
 const deleteStockDistributor = async (id) => StockDistributor.destroy({ where: { id } });
 
-// ── FORECAST ──────────────────────────────────────────────────────────────────
-const findAllForecast = async ({ brandId, periodDate } = {}) => {
+// ── FORECAST — sekarang include SubBrand & Product
+const findAllForecast = async ({ brandId, subBrandId, productId, periodDate } = {}) => {
   const where = {};
   if (brandId)    where.brandId    = parseInt(brandId);
+  if (subBrandId) where.subBrandId = parseInt(subBrandId);
+  if (productId)  where.productId  = parseInt(productId);
   if (periodDate) where.periodDate = periodDate;
-  return Forecast.findAll({ where, include: [includeBrand], order: [['periodDate', 'DESC']] });
+  return Forecast.findAll({
+    where,
+    include: [includeBrand, includeSubBrand, includeProduct],
+    order: [['periodDate', 'DESC']]
+  });
 };
-const getLatestForecastPerBrand = async () => Forecast.findAll({ include: [includeBrand], order: [['periodDate', 'DESC']] });
-const createForecast  = async (data) => Forecast.create(data);
-const updateForecast  = async (id, data) => { const r = await Forecast.findByPk(id); return r ? r.update(data) : null; };
-const deleteForecast  = async (id) => Forecast.destroy({ where: { id } });
+const getLatestForecastPerBrand = async () => Forecast.findAll({
+  include: [includeBrand, includeSubBrand, includeProduct],
+  order: [['periodDate', 'DESC']]
+});
+const createForecast = async (data) => Forecast.create(data);
+const updateForecast = async (id, data) => { const r = await Forecast.findByPk(id); return r ? r.update(data) : null; };
+const deleteForecast = async (id) => Forecast.destroy({ where: { id } });
 
 module.exports = {
   findAllLeadtime, createLeadtime, updateLeadtime, deleteLeadtime,

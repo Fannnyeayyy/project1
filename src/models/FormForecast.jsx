@@ -1,6 +1,7 @@
 /**
  * FormForecast.jsx
  * Modal form untuk tambah / edit data Forecast.
+ * v2 — tambah subBrandId & productId
  */
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
@@ -11,20 +12,25 @@ const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "
 const formatRupiah = (val) => String(val || "").replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 const parseRupiah  = (val) => String(val).replace(/\./g, "");
 
-function FormForecast({ isOpen, onClose, onSubmit, editData, brands = [], onError = () => {} }) {
-  const empty = { brandId: "", plan: "", week1: "", week2: "", week3: "", week4: "", periodDate: "" };
+function FormForecast({ isOpen, onClose, onSubmit, editData, brands = [], subBrands = [], products = [], onError = () => {} }) {
+  const empty = { brandId: "", subBrandId: "", productId: "", week1: "", week2: "", week3: "", week4: "", periodDate: "" };
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
+
+  // Sub brand dan product yang difilter berdasarkan pilihan
+  const filteredSubBrands = form.brandId ? subBrands.filter(sb => sb.brandId === parseInt(form.brandId)) : [];
+  const filteredProducts  = form.subBrandId ? products.filter(p => p.subBrandId === parseInt(form.subBrandId)) : [];
 
   useEffect(() => {
     if (editData) {
       setForm({
-        brandId: editData.brandId ?? "",
-        plan: editData.plan ?? "",
-        week1: editData.week1 ?? "",
-        week2: editData.week2 ?? "",
-        week3: editData.week3 ?? "",
-        week4: editData.week4 ?? "",
+        brandId:    editData.brandId    ?? "",
+        subBrandId: editData.subBrandId ?? "",
+        productId:  editData.productId  ?? "",
+        week1:      editData.week1      ?? "",
+        week2:      editData.week2      ?? "",
+        week3:      editData.week3      ?? "",
+        week4:      editData.week4      ?? "",
         periodDate: editData.periodDate ?? "",
       });
     } else {
@@ -36,25 +42,34 @@ function FormForecast({ isOpen, onClose, onSubmit, editData, brands = [], onErro
     const { name, value } = e.target;
     if (["week1", "week2", "week3", "week4"].includes(name)) {
       setForm(prev => ({ ...prev, [name]: parseRupiah(value) }));
+    } else if (name === "brandId") {
+      // Reset sub brand & product saat brand berubah
+      setForm(prev => ({ ...prev, brandId: value, subBrandId: "", productId: "" }));
+    } else if (name === "subBrandId") {
+      // Reset product saat sub brand berubah
+      setForm(prev => ({ ...prev, subBrandId: value, productId: "" }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // Total semua week
   const total = ["week1", "week2", "week3", "week4"].reduce((sum, w) => sum + (parseFloat(form[w]) || 0), 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.plan || !form.periodDate) return onError("Brand, plan, dan periode wajib diisi");
+    if (!form.brandId || !form.subBrandId || !form.productId || !form.periodDate) {
+      return onError("Brand, Sub Brand, Product, dan Periode wajib diisi");
+    }
     setLoading(true);
     await onSubmit({
-      ...form,
-      brandId: parseInt(form.brandId),
+      brandId:    parseInt(form.brandId),
+      subBrandId: parseInt(form.subBrandId),
+      productId:  parseInt(form.productId),
       week1: parseFloat(form.week1) || 0,
       week2: parseFloat(form.week2) || 0,
       week3: parseFloat(form.week3) || 0,
       week4: parseFloat(form.week4) || 0,
+      periodDate: form.periodDate,
     }, editData?.id);
     setLoading(false);
   };
@@ -70,6 +85,8 @@ function FormForecast({ isOpen, onClose, onSubmit, editData, brands = [], onErro
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+
+          {/* Brand */}
           <div>
             <label style={labelStyle}>Brand</label>
             <select name="brandId" value={form.brandId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
@@ -78,11 +95,29 @@ function FormForecast({ isOpen, onClose, onSubmit, editData, brands = [], onErro
             </select>
           </div>
 
+          {/* Sub Brand */}
           <div>
-            <label style={labelStyle}>Plan</label>
-            <input type="text" name="plan" value={form.plan} onChange={handleChange} placeholder="contoh: Mei 1,5 m" style={inputStyle} />
+            <label style={labelStyle}>Sub Brand</label>
+            <select name="subBrandId" value={form.subBrandId} onChange={handleChange}
+              disabled={!form.brandId}
+              style={{ ...inputStyle, appearance: "none", opacity: !form.brandId ? 0.5 : 1 }}>
+              <option value="">Pilih Sub Brand</option>
+              {filteredSubBrands.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
+            </select>
           </div>
 
+          {/* Product */}
+          <div>
+            <label style={labelStyle}>Product</label>
+            <select name="productId" value={form.productId} onChange={handleChange}
+              disabled={!form.subBrandId}
+              style={{ ...inputStyle, appearance: "none", opacity: !form.subBrandId ? 0.5 : 1 }}>
+              <option value="">Pilih Product</option>
+              {filteredProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+
+          {/* Period Date */}
           <div>
             <label style={labelStyle}>Period Date</label>
             <input type="date" name="periodDate" value={form.periodDate} onChange={handleChange} style={inputStyle} />

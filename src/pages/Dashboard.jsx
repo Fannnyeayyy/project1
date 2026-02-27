@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
+import { CalendarDays } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import StatCards from "../components/dashboard/StatCards";
@@ -17,6 +18,8 @@ export const fmtM = (n) => {
   return `Rp ${num.toLocaleString("id-ID")}`;
 };
 
+const MONTHS_ID = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,10 +35,13 @@ export default function Dashboard() {
   // State Forecast
   const [forecastList, setForecastList] = useState([]);
   const [forecastIndex, setForecastIndex] = useState(0);
-  const [editForecastData, setEditForecastData] = useState(null);
 
   // State UI
   const [selectedBrand, setSelectedBrand] = useState("");
+
+  // State Filter Periode
+  const [selectedMonth, setSelectedMonth] = useState(""); // "YYYY-MM" atau "" = semua
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -59,16 +65,26 @@ export default function Dashboard() {
       const brandList = bRes.data || [];
       const fcList = fcRes.data?.data || [];
       const slList = slRes.data?.data || [];
+      const ltList = ltRes.data?.data || [];
 
       setBrands(brandList);
       setProducts(pRes.data || []);
       setSubBrands(sbRes.data || []);
-      setLeadtimes(ltRes.data?.data || []);
+      setLeadtimes(ltList);
       setServiceLevel(slList);
       if (brandList.length > 0) setSelectedBrand(brandList[0].name);
 
+      // Extract available months dari data yang ada (service level, leadtime, forecast)
+      const allDates = [
+        ...slList.map(r => r.periodDate),
+        ...ltList.map(r => r.eta || r.tanggalKeluarPabrik),
+        ...fcList.map(r => r.periodDate),
+      ].filter(Boolean).map(d => d.slice(0, 7));
+      const uniqueMonths = [...new Set(allDates)].sort().reverse();
+      setAvailableMonths(uniqueMonths);
+      setSelectedMonth(uniqueMonths[0] || "");
+
       if (fcList.length > 0) {
-        // Urutkan dari terbaru, simpan semua
         const sorted = [...fcList].sort((a, b) => new Date(b.periodDate || 0) - new Date(a.periodDate || 0));
         const mapped = sorted.map(fc => ({
           id: fc.id,
@@ -82,7 +98,6 @@ export default function Dashboard() {
         }));
         setForecastList(mapped);
         setForecastIndex(0);
-        setEditForecastData(mapped[0]);
       }
     } catch (e) {
       console.error("[Dashboard] Critical fetch error:", e);
@@ -91,18 +106,46 @@ export default function Dashboard() {
     }
   };
 
-  // Derived: total sales semua brand
-  const totalSales = useMemo(() => serviceLevel.reduce((s, r) => {
+  // Format label bulan untuk dropdown
+  const fmtMonthLabel = (ym) => {
+    if (!ym) return "Semua Periode";
+    const [year, month] = ym.split("-");
+    return `${MONTHS_ID[parseInt(month) - 1]} ${year}`;
+  };
+
+  // Filter serviceLevel berdasarkan periode yang dipilih
+  const filteredServiceLevel = useMemo(() => {
+    if (!selectedMonth) return serviceLevel;
+    return serviceLevel.filter(r => r.periodDate?.startsWith(selectedMonth));
+  }, [serviceLevel, selectedMonth]);
+
+  // Filter leadtime berdasarkan periode (gunakan eta atau tanggal keluarPabrik)
+  const filteredLeadtimes = useMemo(() => {
+    if (!selectedMonth) return leadtimes;
+    return leadtimes.filter(r => {
+      const d = r.eta || r.tanggalKeluarPabrik || "";
+      return d.startsWith(selectedMonth);
+    });
+  }, [leadtimes, selectedMonth]);
+
+  // Filter forecast berdasarkan periode
+  const filteredForecastList = useMemo(() => {
+    if (!selectedMonth) return forecastList;
+    return forecastList.filter(fc => fc.periodDate?.startsWith(selectedMonth));
+  }, [forecastList, selectedMonth]);
+
+  // Derived: total sales filtered
+  const totalSales = useMemo(() => filteredServiceLevel.reduce((s, r) => {
     const p = r.Product || r.product;
     return s + (Number(r.actualSales || 0) * Number(p?.hargaPerCarton || 0));
-  }, 0), [serviceLevel]);
+  }, 0), [filteredServiceLevel]);
 
-  // Derived: top 3 lose sales
+  // Derived: top 3 lose sales filtered
   const topLose = useMemo(() =>
-    [...serviceLevel].sort((a, b) => Number(b.loseSales || 0) - Number(a.loseSales || 0)).slice(0, 3)
-  , [serviceLevel]);
+    [...filteredServiceLevel].sort((a, b) => Number(b.loseSales || 0) - Number(a.loseSales || 0)).slice(0, 3)
+  , [filteredServiceLevel]);
 
-  // Derived: data chart 3 bulan terakhir per brand
+  // Derived: chart 3 bulan per brand (tetap 3 bulan dari data asli, tidak difilter periode)
   const brandStats = useMemo(() => {
     const selectedBrandObj = brands.find(b => b.name === selectedBrand);
     if (!selectedBrandObj) return { totalActual: 0, totalLose: 0, chart: [], max: 1, months: [] };
@@ -111,10 +154,8 @@ export default function Dashboard() {
       r.brandId === selectedBrandObj.id || r.Brand?.id === selectedBrandObj.id
     );
 
-    // Ambil 3 bulan unik terakhir dari data
     const allMonths = [...new Set(filtered.map(r => r.periodDate?.slice(0, 7)).filter(Boolean))].sort().slice(-3);
 
-    // Group per bulan → total actual sales
     const chart = allMonths.map(month => {
       const rows = filtered.filter(r => r.periodDate?.startsWith(month));
       const actual = rows.reduce((s, r) => {
@@ -129,7 +170,6 @@ export default function Dashboard() {
       return { label, actual, lose, month };
     });
 
-    // Tampilkan per bulan terakhir, bukan total akumulasi
     const lastMonth = chart.at(-1);
     const totalActual = lastMonth?.actual || 0;
     const totalLose   = lastMonth?.lose   || 0;
@@ -138,38 +178,14 @@ export default function Dashboard() {
     return { totalActual, totalLose, totalLabel, chart, max };
   }, [selectedBrand, brands, serviceLevel]);
 
-  // Handlers
-  const handleSaveForecast = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const rawData = {
-        ...editForecastData,
-        week1: String(editForecastData.week1).replace(/\./g, ""),
-        week2: String(editForecastData.week2).replace(/\./g, ""),
-        week3: String(editForecastData.week3).replace(/\./g, ""),
-        week4: String(editForecastData.week4).replace(/\./g, ""),
-      };
-      await axios.put(`${BASE}/detail/forecast/${editForecastData.id}`, rawData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Update list di index sekarang
-      setForecastList(prev => prev.map((fc, i) => i === forecastIndex ? { ...editForecastData } : fc));
-      alert("Forecast berhasil diperbarui!");
-    } catch (err) {
-      console.error("Gagal simpan forecast:", err);
-      alert("Terjadi kesalahan saat menyimpan.");
-    }
-  };
-
-  const handleForecastChange = (field, value) =>
-    setEditForecastData(prev => ({ ...prev, [field]: value }));
-
   const handleForecastNav = (dir) => {
     const newIdx = forecastIndex + dir;
-    if (newIdx < 0 || newIdx >= forecastList.length) return;
+    if (newIdx < 0 || newIdx >= filteredForecastList.length) return;
     setForecastIndex(newIdx);
-    setEditForecastData(forecastList[newIdx]);
   };
+
+  // Reset forecast index saat filter berubah
+  useMemo(() => { setForecastIndex(0); }, [selectedMonth]);
 
   return (
     <div className="flex h-screen" style={{ background: "#f1f5f9" }}>
@@ -177,9 +193,30 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto px-7 py-6 flex flex-col">
-          <div className="mb-6">
-            <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#1e293b" }}>Dashboard</h1>
-            <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Selamat datang kembali, Admin</p>
+
+          {/* Header + Filter */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#1e293b" }}>Dashboard</h1>
+              <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Selamat datang kembali, Admin</p>
+            </div>
+
+             
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white" style={{ border: "1px solid #e2e8f0" }}>
+              <CalendarDays size={15} style={{ color: "#64748b" }} />
+              <select
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(e.target.value)}
+                className="text-sm font-semibold outline-none bg-transparent pr-1"
+                style={{ color: "#1e293b", cursor: "pointer" }}
+              >
+                <option value="">Semua Periode</option>
+                {availableMonths.map(m => (
+                  <option key={m} value={m}>{fmtMonthLabel(m)}</option>
+                ))}
+              </select>
+            </div>
+            
           </div>
 
           {/* 3 stat cards */}
@@ -189,13 +226,28 @@ export default function Dashboard() {
 
           {/* Status Leadtime + Top Lose Sales */}
           <div className="mb-5">
-            <LeadtimeLoseSales leadtimes={leadtimes} topLose={topLose} fmtM={fmtM} />
+            <LeadtimeLoseSales leadtimes={filteredLeadtimes} topLose={topLose} fmtM={fmtM} />
           </div>
 
           {/* Forecast + Brand Performance */}
-          <div className="grid grid-cols-2 gap-5 flex-1 min-h-0">
-            <ForecastCard forecastData={forecastList[forecastIndex] || null} editForecastData={editForecastData} onSave={handleSaveForecast} onChange={handleForecastChange} forecastIndex={forecastIndex} forecastTotal={forecastList.length} onNav={handleForecastNav} />
-            <BrandPerformanceCard brands={brands} selectedBrand={selectedBrand} onSelectBrand={setSelectedBrand} subBrandChart={brandStats.chart} maxChartVal={brandStats.max} totalActualSelected={brandStats.totalActual} totalLoseSelected={brandStats.totalLose} totalLabel={brandStats.totalLabel} fmtM={fmtM} />
+          <div className="grid grid-cols-2 gap-5">
+            <ForecastCard
+              forecastData={filteredForecastList[forecastIndex] || null}
+              forecastIndex={forecastIndex}
+              forecastTotal={filteredForecastList.length}
+              onNav={handleForecastNav}
+            />
+            <BrandPerformanceCard
+              brands={brands}
+              selectedBrand={selectedBrand}
+              onSelectBrand={setSelectedBrand}
+              subBrandChart={brandStats.chart}
+              maxChartVal={brandStats.max}
+              totalActualSelected={brandStats.totalActual}
+              totalLoseSelected={brandStats.totalLose}
+              totalLabel={brandStats.totalLabel}
+              fmtM={fmtM}
+            />
           </div>
         </main>
       </div>

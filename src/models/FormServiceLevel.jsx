@@ -6,7 +6,7 @@ const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
 
 function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editData, brands = [], subBrands = [], products = [] }) {
-  const empty = { brandId: "", subBrandId: "", productId: "", totalSales: "", actualSales: "", };
+  const empty = { brandId: "", subBrandId: "", productId: "", totalSales: "", actualSales: "", periodDate: "" };
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,7 @@ function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editD
         productId:   editData.productId ?? "",
         totalSales:  editData.totalSales ?? "",
         actualSales: editData.actualSales ?? "",
+        periodDate:  editData.periodDate ?? "",
         });
     } else {
       setForm(empty);
@@ -42,7 +43,7 @@ function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editD
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.subBrandId || !form.productId || !form.totalSales || !form.actualSales)
+    if (!form.brandId || !form.subBrandId || !form.productId || !form.totalSales || !form.actualSales || !form.periodDate)
       return onError("Semua field wajib diisi");
     if (parseInt(form.actualSales) > parseInt(form.totalSales))
       return onError("Actual Sales tidak boleh lebih dari Total Sales");
@@ -54,6 +55,7 @@ function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editD
       productId:   parseInt(form.productId),
       totalSales:  parseInt(form.totalSales),
       actualSales: parseInt(form.actualSales),
+      periodDate:  form.periodDate,
     }, editData?.id);
     setLoading(false);
   };
@@ -91,6 +93,11 @@ function FormServiceLevel({ isOpen, onClose, onSubmit, onError = () => {}, editD
               onChange={val => setForm(prev => ({ ...prev, productId: val }))}
               placeholder="Pilih Product"
             />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Period Date</label>
+            <input type="date" name="periodDate" value={form.periodDate} onChange={handleChange} style={inputStyle} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

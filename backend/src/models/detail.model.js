@@ -1,13 +1,6 @@
 /**
  * detail.model.js
- * Versi 2 — hasil review & perbaikan struktur:
- *
- * Fix yang diterapkan:
- * 1. LeadtimeDelivery   → tambah brandId (filter by brand tanpa double join)
- * 2. StockIndomaret     → tambah periodDate (tracking per periode)
- * 3. StockDistributor   → tambah periodDate (konsisten dengan tabel lain)
- * 4. Semua tabel detail → paranoid: true (soft delete via deletedAt)
- * 5. Tambah tabel Forecast → data forecast tidak lagi hardcoded di frontend
+ * Versi 3 — tambah subBrandId & productId di Forecast
  */
 const sequelize = require('../config/database');
 const { DataTypes } = require('sequelize');
@@ -43,15 +36,14 @@ const ServiceLevelPerformance = sequelize.define('service_level_performance', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
   productId:  { type: DataTypes.INTEGER, allowNull: false, references: { model: Product, key: 'id' } },
-  totalSales:    { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }, // qty diminta Indomaret
-  actualSales:   { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }, // qty dipenuhi distributor
-  loseSales:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: totalSales - actualSales
-  salesRank:     { type: DataTypes.INTEGER, allowNull: true },                   // auto: rank by actualSales
-  performance:   { type: DataTypes.DECIMAL(5, 2), allowNull: true },             // auto: actualSales/totalSales * 100
+  totalSales:    { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  actualSales:   { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  loseSales:     { type: DataTypes.INTEGER, allowNull: true },
+  performance:   { type: DataTypes.DECIMAL(5, 2), allowNull: true },
   periodDate: { type: DataTypes.DATEONLY, allowNull: true }
 }, defaultOptions);
 
-// ── STOCK DISTRIBUTOR 
+// ── STOCK DISTRIBUTOR
 const StockDistributor = sequelize.define('stock_distributor', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
   subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
@@ -63,18 +55,19 @@ const StockDistributor = sequelize.define('stock_distributor', {
   periodDate:  { type: DataTypes.DATEONLY, allowNull: true }
 }, defaultOptions);
 
-// ── FORECAST 
+// ── FORECAST — tambah 
 const Forecast = sequelize.define('forecast', {
   brandId:    { type: DataTypes.INTEGER, allowNull: false, references: { model: Brand, key: 'id' } },
-  plan:       { type: DataTypes.STRING, allowNull: false },       // contoh: "Mei 1,5 m"
+  subBrandId: { type: DataTypes.INTEGER, allowNull: false, references: { model: SubBrand, key: 'id' } },
+  productId:  { type: DataTypes.INTEGER, allowNull: false, references: { model: Product, key: 'id' } },
   week1:      { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
   week2:      { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
   week3:      { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
   week4:      { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0 },
-  periodDate: { type: DataTypes.DATEONLY, allowNull: false }      // misal: 2025-05-01
+  periodDate: { type: DataTypes.DATEONLY, allowNull: false }
 }, defaultOptions);
 
-// ── RELASI 
+// ── RELASI
 [LeadtimeDelivery, StockIndomaret, ServiceLevelPerformance, StockDistributor].forEach(Model => {
   Brand.hasMany(Model, { foreignKey: 'brandId', onDelete: 'CASCADE' });
   Model.belongsTo(Brand, { foreignKey: 'brandId' });
@@ -84,7 +77,12 @@ const Forecast = sequelize.define('forecast', {
   Model.belongsTo(Product, { foreignKey: 'productId' });
 });
 
+// Forecast relasi
 Brand.hasMany(Forecast, { foreignKey: 'brandId', onDelete: 'CASCADE' });
 Forecast.belongsTo(Brand, { foreignKey: 'brandId' });
+SubBrand.hasMany(Forecast, { foreignKey: 'subBrandId', onDelete: 'CASCADE' });
+Forecast.belongsTo(SubBrand, { foreignKey: 'subBrandId' });
+Product.hasMany(Forecast, { foreignKey: 'productId', onDelete: 'CASCADE' });
+Forecast.belongsTo(Product, { foreignKey: 'productId' });
 
 module.exports = { LeadtimeDelivery, StockIndomaret, ServiceLevelPerformance, StockDistributor, Forecast };

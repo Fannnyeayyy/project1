@@ -11,7 +11,7 @@ const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px
 const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
 
 function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, editData, brands = [], subBrands = [], products = [] }) {
-  const empty = { brandId: "", subBrandId: "", productId: "", stockQuantity: "", avgL3m: "" };
+  const empty = { brandId: "", subBrandId: "", productId: "", stockQuantity: "", avgL3m: "", periodDate: "" };
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +23,7 @@ function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, e
         productId: editData.productId ?? "",
         stockQuantity: editData.stockQuantity ?? "",
         avgL3m: editData.avgL3m ?? "",
+        periodDate: editData.periodDate ?? "",
       });
     } else {
       setForm(empty);
@@ -47,7 +48,7 @@ function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, e
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.subBrandId || !form.productId || !form.stockQuantity || !form.avgL3m) return onError("Semua field wajib diisi");
+    if (!form.brandId || !form.subBrandId || !form.productId || !form.stockQuantity || !form.avgL3m || !form.periodDate) return onError("Semua field wajib diisi");
     setLoading(true);
     await onSubmit({
       ...form,
@@ -56,6 +57,7 @@ function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, e
       productId: parseInt(form.productId),
       stockQuantity: parseInt(form.stockQuantity),
       avgL3m: parseInt(form.avgL3m),
+      periodDate: form.periodDate,
       // totalValue dihitung di backend, tapi kirim juga untuk preview
       totalValue: previewTotal,
     }, editData?.id);
@@ -104,6 +106,11 @@ function FormStockDistributor({ isOpen, onClose, onSubmit, onError = () => {}, e
               <span style={{ color: "#64748b" }}>Isi: <strong style={{ color: "#1e293b" }}>{qtyPerCarton} pcs</strong></span>
             </div>
           )}
+
+          <div>
+            <label style={labelStyle}>Period Date</label>
+            <input type="date" name="periodDate" value={form.periodDate} onChange={handleChange} style={inputStyle} />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
