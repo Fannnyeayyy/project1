@@ -22,6 +22,8 @@ const MONTHS_ID = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep"
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const username = user.name || user.username || "User";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -206,7 +208,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "#1e293b" }}>Dashboard</h1>
-              <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Welcome back, Admin</p>
+              <p className="text-sm mt-0.5" style={{ color: "#94a3b8" }}>Welcome back, {username}</p>
             </div>
 
              

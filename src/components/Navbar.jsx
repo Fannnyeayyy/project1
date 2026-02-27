@@ -3,6 +3,12 @@ import { useNavigate } from "react-router";
 
 function Navbar() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const username = user.name || user.username || "User";
+  const role = (user.role || "user").toLowerCase();
+  const roleLabel = role === "admin" ? "Administrator" : "User";
+  const initial = username.charAt(0).toUpperCase();
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -17,14 +23,14 @@ function Navbar() {
         {/* User Info */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-semibold text-slate-800">Admin</p>
-            <p className="text-xs text-slate-400">Administrator</p>
+            <p className="text-sm font-semibold text-slate-800">{username}</p>
+            <p className="text-xs text-slate-400">{roleLabel}</p>
           </div>
           <div
             className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #2563eb, #60a5fa)" }}
+            style={{ background: role === "admin" ? "linear-gradient(135deg, #2563eb, #60a5fa)" : "linear-gradient(135deg, #10b981, #6ee7b7)" }}
           >
-            A
+            {initial}
           </div>
         </div>
 
