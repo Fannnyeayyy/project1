@@ -75,15 +75,15 @@ function DataTable({ columns, data, loading, onEdit, onDelete, color, isAdmin = 
         <span className="text-xs" style={{ color: "#94a3b8" }}><strong style={{ color }}>{filtered.length}</strong> entri</span>
       </div>
 
-      <div className="overflow-x-auto flex-1">
+     <div className="overflow-x-auto flex-1" style={{ overflowY: "auto" }}>
         {loading ? (
           <div className="flex items-center justify-center h-40 text-sm" style={{ color: "#94a3b8" }}>Loading data...</div>
         ) : (
-          <table className="w-full">
+          <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
             <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 10 }}>
                 {columns.map((col, idx) => (
-                  <th key={`${col.key}-${idx}`} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b" }}>{col.label}</th>
+                  <th key={`${col.key}-${idx}`} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: "#64748b", width: col.width || "auto" }}>{col.label}</th>
                 ))}
                 <th className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest" style={{ color: "#64748b" }}>{isAdmin ? "Action" : ""}</th>
               </tr>
@@ -283,34 +283,6 @@ function Detail() {
       ]
     },
     {
-      key: "stock_delivery", label: "Stock Delivery", icon: ShoppingBag, color: "#10b981", bg: "#d1fae5",
-      data: stockIndomaret, onAdd: () => openAdd("stockIndomaret"), onEdit: r => openEdit("stockIndomaret", r), onDelete: id => openDelete("stockIndomaret", id),
-      columns: [
-        { key: "id", label: "ID" },
-        { key: "brand",     label: "Brand",     render: (_, r) => r.brand?.name     ?? "—" },
-        { key: "sub_brand", label: "Sub Brand", render: (_, r) => r.sub_brand?.name ?? "—" },
-        { key: "product",   label: "Product",   render: (_, r) => r.product?.name   ?? "—" },
-        { key: "avgL3m", label: "Avg L3M" },
-        { key: "totalValue", label: "Total Value", render: v => fmtRp(v) },
-        { key: "isActive", label: "Status", render: v => <StatusChip value={v} /> },
-      ]
-    },
-    {
-      key: "service_level", label: "Service Level", icon: BarChart2, color: "#7c3aed", bg: "#ede9fe",
-      data: serviceLevel, onAdd: () => openAdd("serviceLevel"), onEdit: r => openEdit("serviceLevel", r), onDelete: id => openDelete("serviceLevel", id),
-      columns: [
-        { key: "id", label: "ID" },
-        { key: "brand",     label: "Brand",     render: (_, r) => (r.Brand     || r.brand)?.name     ?? "—" },
-        { key: "sub_brand", label: "Sub Brand", render: (_, r) => (r.SubBrand  || r.sub_brand)?.name ?? "—" },
-        { key: "product",   label: "Product",   render: (_, r) => (r.Product   || r.product)?.name   ?? "—" },
-        { key: "periodDate", label: "Period", render: v => fmtDate(v) },
-        { key: "totalSales",  label: "Total Sales",  render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
-        { key: "actualSales", label: "Actual Sales", render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
-        { key: "loseSales",   label: "Lose Sales",   render: (v, r) => { const p = r.Product || r.product; const val = Number(v) * Number(p?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{fmtRp(val)}</span>; } },
-        { key: "performance", label: "Performance (%)", render: v => v ? `${v}%` : "—" },
-      ]
-    },
-    {
       key: "stock_distributor", label: "Stock Distributor", icon: Package, color: "#f59e0b", bg: "#fef3c7",
       data: stockDistributor, onAdd: () => openAdd("stockDistributor"), onEdit: r => openEdit("stockDistributor", r), onDelete: id => openDelete("stockDistributor", id),
       columns: [
@@ -325,13 +297,41 @@ function Detail() {
       ]
     },
     {
+      key: "stock_delivery", label: "Stock Delivery Status", icon: ShoppingBag, color: "#10b981", bg: "#d1fae5",
+      data: stockIndomaret, onAdd: () => openAdd("stockIndomaret"), onEdit: r => openEdit("stockIndomaret", r), onDelete: id => openDelete("stockIndomaret", id),
+      columns: [
+        { key: "id",         label: "ID" },
+        { key: "brand",      label: "Brand",       render: (_, r) => r.brand?.name     ?? "—" },
+        { key: "sub_brand",  label: "Sub Brand",   render: (_, r) => r.sub_brand?.name ?? "—" },
+        { key: "product",    label: "Product",     render: (_, r) => r.product?.name   ?? "—" },
+        { key: "avgL3m",     label: "Qty" },
+        { key: "totalValue", label: "Total Value", render: v => fmtRp(v) },
+        { key: "isActive",   label: "Status",      render: v => <StatusChip value={v} /> },
+      ]
+    },
+    {
+      key: "service_level", label: "Service Level", icon: BarChart2, color: "#7c3aed", bg: "#ede9fe",
+      data: serviceLevel, onAdd: () => openAdd("serviceLevel"), onEdit: r => openEdit("serviceLevel", r), onDelete: id => openDelete("serviceLevel", id),
+      columns: [
+        { key: "id", label: "ID" },
+        { key: "brand",     label: "Brand",     render: (_, r) => (r.Brand     || r.brand)?.name     ?? "—" },
+        { key: "sub_brand", label: "Sub Brand", render: (_, r) => (r.SubBrand  || r.sub_brand)?.name ?? "—" },
+        { key: "product",   label: "Product",   render: (_, r) => (r.Product   || r.product)?.name   ?? "—" },
+        { key: "periodDate",  label: "Period",           render: v => fmtDate(v) },
+        { key: "totalSales",  label: "Total Sales",      render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
+        { key: "actualSales", label: "Actual Sales",     render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
+        { key: "loseSales",   label: "Lose Sales",       render: (v, r) => { const p = r.Product || r.product; const val = Number(v) * Number(p?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{fmtRp(val)}</span>; } },
+        { key: "performance", label: "Performance (%)",  render: v => v ? `${v}%` : "—" },
+      ]
+    },
+    {
       key: "forecast", label: "Forecast", icon: TrendingUp, color: "#0ea5e9", bg: "#e0f2fe",
       data: forecast, onAdd: () => openAdd("forecast"), onEdit: r => openEdit("forecast", r), onDelete: id => openDelete("forecast", id),
       columns: [
         { key: "id", label: "ID" },
-        { key: "brand",     label: "Brand",     render: (_, r) => r.brand?.name                       ?? "—" },
-        { key: "sub_brand", label: "Sub Brand", render: (_, r) => (r.sub_brand || r.SubBrand)?.name   ?? "—" },
-        { key: "product",   label: "Product",   render: (_, r) => (r.product   || r.Product)?.name    ?? "—" },
+        { key: "brand",     label: "Brand",     render: (_, r) => r.brand?.name                     ?? "—" },
+        { key: "sub_brand", label: "Sub Brand", render: (_, r) => (r.sub_brand || r.SubBrand)?.name ?? "—" },
+        { key: "product",   label: "Product",   render: (_, r) => (r.product   || r.Product)?.name  ?? "—" },
         { key: "week1", label: "Week 1", render: v => fmtRp(v) },
         { key: "week2", label: "Week 2", render: v => fmtRp(v) },
         { key: "week3", label: "Week 3", render: v => fmtRp(v) },

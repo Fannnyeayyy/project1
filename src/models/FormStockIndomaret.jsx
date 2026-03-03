@@ -89,7 +89,7 @@ function FormStockIndomaret({ isOpen, onClose, onSubmit, onError = () => {}, edi
           </div>
 
           <div>
-            <label style={ls}>Avg L3M (Qty) <span style={{color:"#ef4444"}}>*</span></label>
+            <label style={ls}>Qty <span style={{color:"#ef4444"}}>*</span></label>
             <input type="number" value={form.avgL3m} onChange={e => set('avgL3m', e.target.value)} placeholder="0" style={ic(errors.avgL3m)} min="0" />
             <Err msg={errors.avgL3m} />
           </div>
