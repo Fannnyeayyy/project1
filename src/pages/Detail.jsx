@@ -308,7 +308,6 @@ function Detail() {
         { key: "actualSales", label: "Actual Sales", render: (v, r) => { const p = r.Product || r.product; return fmtRp(Number(v) * Number(p?.hargaPerCarton || 0)); } },
         { key: "loseSales",   label: "Lose Sales",   render: (v, r) => { const p = r.Product || r.product; const val = Number(v) * Number(p?.hargaPerCarton || 0); return <span style={{ color: val > 0 ? "#ef4444" : "#10b981", fontWeight: 600 }}>{fmtRp(val)}</span>; } },
         { key: "performance", label: "Performance (%)", render: v => v ? `${v}%` : "—" },
-        { key: "salesRank",   label: "Rank" },
       ]
     },
     {

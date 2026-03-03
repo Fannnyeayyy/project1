@@ -1,11 +1,13 @@
-import { DollarSign, Package, Tag, ArrowUpRight } from "lucide-react";
+import { DollarSign, Package, Tag, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-export default function StatCards({ loading, totalSales, totalProducts, totalSubBrands, fmtM }) {
+export default function StatCards({ loading, totalSales, totalProducts, totalSubBrands, salesGrowth, fmtM }) {
   const cards = [
     { label: "Total Sales",     value: loading ? "—" : fmtM(totalSales), color: "#2563eb", bg: "#eff6ff", Icon: DollarSign, showTrend: true },
     { label: "Total Product",   value: loading ? "—" : totalProducts,    color: "#10b981", bg: "#d1fae5", Icon: Package,     showTrend: false, big: true },
     { label: "Total Sub Brand", value: loading ? "—" : totalSubBrands,   color: "#7c3aed", bg: "#ede9fe", Icon: Tag,         showTrend: false, big: true },
   ];
+
+  const isUp = parseFloat(salesGrowth) >= 0;
 
   return (
     <div className="grid grid-cols-3 gap-5 mb-6">
@@ -14,15 +16,29 @@ export default function StatCards({ loading, totalSales, totalProducts, totalSub
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#94a3b8" }}>{label}</p>
             <p className={`${big ? "text-4xl" : "text-3xl"} font-bold tracking-tight`} style={{ color: "#1e293b" }}>{value}</p>
+
             {showTrend ? (
               <div className="flex items-center gap-1 mt-3">
-                <ArrowUpRight size={13} style={{ color: "#10b981" }} />
-                <span className="text-xs" style={{ color: "#94a3b8" }}>dari bulan lalu</span>
+                {salesGrowth !== null ? (
+                  <>
+                    {isUp
+                      ? <ArrowUpRight size={13} style={{ color: "#10b981" }} />
+                      : <ArrowDownRight size={13} style={{ color: "#ef4444" }} />
+                    }
+                    <span className="text-xs font-semibold" style={{ color: isUp ? "#10b981" : "#ef4444" }}>
+                      {isUp ? "+" : ""}{salesGrowth}%
+                    </span>
+                    <span className="text-xs" style={{ color: "#94a3b8" }}>dari bulan lalu</span>
+                  </>
+                ) : (
+                  <span className="text-xs" style={{ color: "#94a3b8" }}>— tidak ada data bulan lalu</span>
+                )}
               </div>
             ) : (
               <div className="mt-3" style={{ height: "20px" }} />
             )}
           </div>
+
           <div className="rounded-xl p-3.5" style={{ background: bg }}>
             <Icon size={22} style={{ color }} />
           </div>
@@ -30,4 +46,4 @@ export default function StatCards({ loading, totalSales, totalProducts, totalSub
       ))}
     </div>
   );
-} 
+}

@@ -1,100 +1,89 @@
-import React from "react";
-import { X, Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useFormValidation, v } from "../hooks/useFormValidation";
 
-function FormEditUser({ isOpen, onClose, formData, onInputChange, onSubmit }) {
-  const [showPassword, setShowPassword] = React.useState(false);
+const RULES = {
+  username: v.required('Username'),
+  password: (val) => val && val.length > 0 && val.length < 6 ? 'Password minimal 6 karakter' : null,
+  role:     v.required('Role'),
+};
+const ic = (err) => ({ border: `1px solid ${err ? '#ef4444' : '#e2e8f0'}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" });
+const ls = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
+const Err = ({ msg }) => msg ? <span className="flex items-center gap-1 mt-1 text-xs" style={{ color: "#ef4444" }}><AlertCircle size={11} />{msg}</span> : null;
+
+function FormEditUser({ isOpen, onClose, onSubmit, editData }) {
+  const [form, setForm] = useState({ username: "", password: "", role: "user" });
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { errors, validate, clearError } = useFormValidation(RULES);
+
+  useEffect(() => {
+    setForm(editData
+      ? { username: editData.username ?? "", password: "", role: editData.role ?? "user" }
+      : { username: "", password: "", role: "user" }
+    );
+  }, [editData, isOpen]);
+
+  const set = (name, value) => { setForm(prev => ({ ...prev, [name]: value })); clearError(name); };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate(form)) return;
+    setLoading(true);
+    const payload = { username: form.username, role: form.role };
+    if (form.password) payload.password = form.password;
+    await onSubmit(payload, editData?.id);
+    setLoading(false);
+  };
+
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8">
-        {/* Header */}
-        <div className="mb-8 border-b border-gray-200 pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800">Edit User</h2>
-              <p className="text-gray-500 text-base mt-2">
-                Isi formulir untuk mengubah data user.
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition"
-            >
-              <X size={28} />
-            </button>
-          </div>
+    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.5)" }}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: "1px solid #e2e8f0" }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <span className="text-sm font-bold" style={{ color: "#1e293b" }}>Edit User</span>
+          <button onClick={onClose} style={{ color: "#94a3b8" }}><X size={18} /></button>
         </div>
-
-        {/* Form */}
-        <form onSubmit={onSubmit} className="space-y-6">
-          {/* Username */}
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={onInputChange}
-              required
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              placeholder="Masukkan username"
-            />
+            <label style={ls}>Username <span style={{ color: "#ef4444" }}>*</span></label>
+            <input type="text" value={form.username} onChange={e => set('username', e.target.value)}
+              placeholder="Masukkan username" style={ic(errors.username)} />
+            <Err msg={errors.username} />
           </div>
-
-          {/* Password */}
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
-              Password
+            <label style={ls}>
+              Password Baru
+              <span style={{ color: "#94a3b8", fontWeight: 400, textTransform: "none", marginLeft: 6 }}>
+                (kosongkan jika tidak diganti)
+              </span>
             </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password || ""}
-                onChange={onInputChange}
-                className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-12"
-                placeholder="Kosongkan jika tidak diubah"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            <div style={{ position: "relative" }}>
+              <input type={showPass ? "text" : "password"} value={form.password}
+                onChange={e => set('password', e.target.value)}
+                placeholder="Min. 6 karakter"
+                style={{ ...ic(errors.password), paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowPass(p => !p)}
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", background: "none", border: "none", cursor: "pointer" }}>
+                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
-              * Kosongkan jika tidak ingin mengubah password
-            </p>
+            <Err msg={errors.password} />
           </div>
-
-          {/* Role */}
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
-              Role
-            </label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={onInputChange}
-              required
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-lg text-gray-800 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            >
+            <label style={ls}>Role <span style={{ color: "#ef4444" }}>*</span></label>
+            <select value={form.role} onChange={e => set('role', e.target.value)}
+              style={{ ...ic(errors.role), appearance: "none" }}>
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-
-          {/* Buttons */}
-          <div className="flex gap-4 pt-3">
-            <button
-              type="submit"
-              className="flex-1 px-4 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg text-base"
-            >
-              Simpan User
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-semibold"
+              style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>Batal</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+              style={{ background: "#2563eb" }}>
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>

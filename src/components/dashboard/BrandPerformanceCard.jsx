@@ -4,6 +4,7 @@ export default function BrandPerformanceCard({
   brands, selectedBrand, onSelectBrand,
   subBrandChart,
   totalActualSelected, totalLoseSelected, totalLabel,
+  activePrefix = "",
   fmtM,
 }) {
   const maxValue = Math.max(...subBrandChart.map(d => d.actual), 1);
@@ -11,8 +12,13 @@ export default function BrandPerformanceCard({
   const growth = subBrandChart.length >= 2
     ? (((subBrandChart.at(-1)?.actual - subBrandChart[0]?.actual) / (subBrandChart[0]?.actual || 1)) * 100).toFixed(1)
     : null;
-
   const isPositive = parseFloat(growth) >= 0;
+
+  // Cek apakah bulan ini sesuai filter aktif
+  const isActive = (month) => {
+    if (!activePrefix) return false;
+    return month?.startsWith(activePrefix);
+  };
 
   return (
     <div className="bg-white rounded-xl overflow-hidden flex flex-col h-full" style={{ border: "1px solid #e2e8f0" }}>
@@ -43,44 +49,52 @@ export default function BrandPerformanceCard({
       <div className="p-6 flex-1 flex flex-col">
         {subBrandChart.length > 0 ? (
           <>
-            {/* Bar Chart — pure CSS seperti referensi */}
+            {/* Bar Chart */}
             <div className="flex items-end gap-5 mb-4 flex-1" style={{ minHeight: "260px" }}>
-              {subBrandChart.map(({ label, actual, lose }) => {
+              {subBrandChart.map(({ label, actual, lose, month }) => {
                 const actualPct = (actual / maxValue) * 100;
                 const losePct   = (lose   / maxValue) * 100;
+                const active    = isActive(month);
                 return (
                   <div key={label} className="flex-1 flex flex-col items-center justify-end h-full gap-2">
-                    {/* Label nilai actual */}
-                    <span className="text-xs font-semibold" style={{ color: "#64748b" }}>{fmtM(actual)}</span>
-
-                    {/* Dua bar berdampingan */}
+                    <span className="text-xs font-semibold" style={{ color: active ? "#2563eb" : "#64748b" }}>
+                      {fmtM(actual)}
+                    </span>
                     <div className="w-full flex gap-1 items-end" style={{ flex: 1 }}>
-                      {/* Actual bar */}
                       <div className="flex-1 flex items-end" style={{ height: "100%" }}>
                         <div
                           className="w-full rounded-t-lg transition-all duration-500"
                           style={{
                             height: `${actualPct}%`,
                             minHeight: "32px",
-                            background: "linear-gradient(180deg, #60a5fa, #2563eb)",
+                            background: active
+                              ? "linear-gradient(180deg, #60a5fa, #2563eb)"
+                              : "linear-gradient(180deg, #bfdbfe, #93c5fd)",
+                            boxShadow: active ? "0 0 0 2px #dbeafe" : "none",
                           }}
                         />
                       </div>
-                      {/* Lose bar */}
                       <div className="flex-1 flex items-end" style={{ height: "100%" }}>
                         <div
                           className="w-full rounded-t-lg transition-all duration-500"
                           style={{
                             height: `${losePct}%`,
                             minHeight: lose > 0 ? "24px" : "0px",
-                            background: "linear-gradient(180deg, #fca5a5, #ef4444)",
+                            background: active
+                              ? "linear-gradient(180deg, #fca5a5, #ef4444)"
+                              : "linear-gradient(180deg, #fecaca, #fca5a5)",
                           }}
                         />
                       </div>
                     </div>
-
-                    {/* Label bulan */}
-                    <span className="text-xs font-medium" style={{ color: "#94a3b8" }}>{label}</span>
+                    {/* Label bulan — bold & biru kalau aktif */}
+                    <span className="text-xs font-medium" style={{
+                      color: active ? "#2563eb" : "#94a3b8",
+                      fontWeight: active ? 700 : 500,
+                    }}>
+                      {label}
+                      {active && <span style={{ display: "block", width: 4, height: 4, borderRadius: "50%", background: "#2563eb", margin: "2px auto 0" }} />}
+                    </span>
                   </div>
                 );
               })}
@@ -98,7 +112,7 @@ export default function BrandPerformanceCard({
               </div>
             </div>
 
-            {/* Summary bottom — per bulan */}
+            {/* Ringkasan bawah */}
             <div className="pt-4" style={{ borderTop: "1px solid #f1f5f9" }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#94a3b8" }}>
@@ -109,8 +123,7 @@ export default function BrandPerformanceCard({
                     style={{ background: isPositive ? "#d1fae5" : "#fee2e2" }}>
                     {isPositive
                       ? <TrendingUp size={12} style={{ color: "#10b981" }} />
-                      : <TrendingDown size={12} style={{ color: "#ef4444" }} />
-                    }
+                      : <TrendingDown size={12} style={{ color: "#ef4444" }} />}
                     <span className="text-xs font-bold" style={{ color: isPositive ? "#10b981" : "#ef4444" }}>
                       {isPositive ? "+" : ""}{growth}%
                     </span>
@@ -118,19 +131,29 @@ export default function BrandPerformanceCard({
                 )}
               </div>
               <div className="flex gap-3">
-                {subBrandChart.map(({ label, actual, lose }) => (
-                  <div key={label} className="flex-1 rounded-xl p-3" style={{ background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#94a3b8" }}>{label}</p>
-                    <div className="flex items-center gap-1 mb-1">
-                      <div style={{ width: 6, height: 6, borderRadius: 2, background: "linear-gradient(180deg,#60a5fa,#2563eb)", flexShrink: 0 }} />
-                      <p className="text-xs font-bold" style={{ color: "#1e293b" }}>{fmtM(actual)}</p>
+                {subBrandChart.map(({ label, actual, lose, month }) => {
+                  const active = isActive(month);
+                  return (
+                    <div key={label} className="flex-1 rounded-xl p-3 transition-all"
+                      style={{
+                        background: active ? "#eff6ff" : "#f8fafc",
+                        border: `1px solid ${active ? "#bfdbfe" : "#f1f5f9"}`,
+                      }}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-2"
+                        style={{ color: active ? "#2563eb" : "#94a3b8" }}>
+                        {label}
+                      </p>
+                      <div className="flex items-center gap-1 mb-1">
+                        <div style={{ width: 6, height: 6, borderRadius: 2, background: "linear-gradient(180deg,#60a5fa,#2563eb)", flexShrink: 0 }} />
+                        <p className="text-xs font-bold" style={{ color: "#1e293b" }}>{fmtM(actual)}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div style={{ width: 6, height: 6, borderRadius: 2, background: "linear-gradient(180deg,#fca5a5,#ef4444)", flexShrink: 0 }} />
+                        <p className="text-xs font-semibold" style={{ color: "#ef4444" }}>{fmtM(lose)}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <div style={{ width: 6, height: 6, borderRadius: 2, background: "linear-gradient(180deg,#fca5a5,#ef4444)", flexShrink: 0 }} />
-                      <p className="text-xs font-semibold" style={{ color: "#ef4444" }}>{fmtM(lose)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </>

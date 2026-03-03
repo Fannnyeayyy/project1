@@ -1,65 +1,60 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import SearchableDropdown from "../components/SearchableDropdown";
-
-const inputStyle = { border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" };
-const labelStyle = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
+import { useFormValidation, v } from "../hooks/useFormValidation";
 
 const STATUS_OPTIONS = ["Pending", "In Transit", "Delivered", "Delayed", "Cancelled"];
-const STATUS_COLORS = {
-  "Pending":    { bg: "#f1f5f9", color: "#64748b" },
-  "In Transit": { bg: "#dbeafe", color: "#2563eb" },
-  "Delivered":  { bg: "#d1fae5", color: "#10b981" },
-  "Delayed":    { bg: "#fee2e2", color: "#ef4444" },
-  "Cancelled":  { bg: "#f3f4f6", color: "#6b7280" },
+const RULES = {
+  brandId:             v.positiveInt('Brand'),
+  subBrandId:          v.positiveInt('Sub Brand'),
+  productId:           v.positiveInt('Product'),
+  qtyOrder:            v.int('Qty Order', 1),
+  eta:                 (val, form) => v.requiredDate('ETA')(val) || v.etaAfterFactory()(val, form),
+  status:              v.required('Status'),
+  tanggalKeluarPabrik: () => null, // opsional
 };
 
+const ic = (err) => ({ border: `1px solid ${err ? '#ef4444' : '#e2e8f0'}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" });
+const ls = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
+const Err = ({ msg }) => msg ? <span className="flex items-center gap-1 mt-1 text-xs" style={{ color: "#ef4444" }}><AlertCircle size={11} />{msg}</span> : null;
+const EMPTY = { brandId: "", subBrandId: "", productId: "", qtyOrder: "", eta: "", status: "Pending", tanggalKeluarPabrik: "", notes: "" };
+
 function FormLeadtime({ isOpen, onClose, onSubmit, onError = () => {}, editData, brands = [], subBrands = [], products = [] }) {
-  const empty = { brandId: "", subBrandId: "", productId: "", qtyOrder: "", eta: "", status: "Pending", tanggalKeluarPabrik: "", notes: "" };
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
+  const { errors, validate, clearError } = useFormValidation(RULES);
 
   useEffect(() => {
-    if (editData) {
-      setForm({
-        brandId: editData.brandId ?? "",
-        subBrandId: editData.subBrandId ?? "",
-        productId: editData.productId ?? "",
-        qtyOrder: editData.qtyOrder ?? "",
-        eta: editData.eta ?? "",
-        status: editData.status ?? "Pending",
-        tanggalKeluarPabrik: editData.tanggalKeluarPabrik ?? "",
-        notes: editData.notes ?? "",
-      });
-    } else {
-      setForm(empty);
-    }
+    setForm(editData ? {
+      brandId: editData.brandId ?? "", subBrandId: editData.subBrandId ?? "",
+      productId: editData.productId ?? "", qtyOrder: editData.qtyOrder ?? "",
+      eta: editData.eta ?? "", status: editData.status ?? "Pending",
+      tanggalKeluarPabrik: editData.tanggalKeluarPabrik ?? "", notes: editData.notes ?? "",
+    } : EMPTY);
   }, [editData, isOpen]);
 
-  const filteredSubBrands = form.brandId ? subBrands.filter(sb => sb.brandId === parseInt(form.brandId)) : subBrands;
-  const filteredProducts  = form.subBrandId ? products.filter(p => p.subBrandId === parseInt(form.subBrandId)) : products;
+  const filteredSub  = form.brandId    ? subBrands.filter(sb => sb.brandId    === parseInt(form.brandId))    : [];
+  const filteredProd = form.subBrandId ? products.filter(p   => p.subBrandId  === parseInt(form.subBrandId)) : [];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  const set = (name, value) => {
+    setForm(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === 'brandId')    { next.subBrandId = ""; next.productId = ""; }
+      if (name === 'subBrandId') { next.productId = ""; }
+      return next;
+    });
+    clearError(name);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.brandId || !form.subBrandId || !form.productId || !form.qtyOrder || !form.eta) return onError("Semua field wajib diisi");
+    if (!validate(form)) return;
     setLoading(true);
-    await onSubmit({
-      ...form,
-      brandId: parseInt(form.brandId),
-      subBrandId: parseInt(form.subBrandId),
-      productId: parseInt(form.productId),
-      qtyOrder: parseInt(form.qtyOrder),
-    }, editData?.id);
+    await onSubmit({ ...form, brandId: parseInt(form.brandId), subBrandId: parseInt(form.subBrandId), productId: parseInt(form.productId), qtyOrder: parseInt(form.qtyOrder) }, editData?.id);
     setLoading(false);
   };
 
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.5)" }}>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ border: "1px solid #e2e8f0" }}>
@@ -67,75 +62,72 @@ function FormLeadtime({ isOpen, onClose, onSubmit, onError = () => {}, editData,
           <span className="text-sm font-bold" style={{ color: "#1e293b" }}>{editData ? "Edit Leadtime" : "Tambah Leadtime"}</span>
           <button onClick={onClose} style={{ color: "#94a3b8" }}><X size={18} /></button>
         </div>
-
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-          {/* Brand */}
+
           <div>
-            <label style={labelStyle}>Brand</label>
-            <select name="brandId" value={form.brandId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
+            <label style={ls}>Brand <span style={{color:"#ef4444"}}>*</span></label>
+            <select value={form.brandId} onChange={e => set('brandId', e.target.value)} style={{ ...ic(errors.brandId), appearance: "none" }}>
               <option value="">Pilih Brand</option>
               {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
+            <Err msg={errors.brandId} />
           </div>
 
-          {/* Sub Brand */}
           <div>
-            <label style={labelStyle}>Sub Brand</label>
-            <select name="subBrandId" value={form.subBrandId} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
-              <option value="">Pilih Sub Brand</option>
-              {filteredSubBrands.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
+            <label style={ls}>Sub Brand <span style={{color:"#ef4444"}}>*</span></label>
+            <select value={form.subBrandId} onChange={e => set('subBrandId', e.target.value)} disabled={!form.brandId}
+              style={{ ...ic(errors.subBrandId), appearance: "none", opacity: !form.brandId ? 0.4 : 1, cursor: !form.brandId ? "not-allowed" : "pointer" }}>
+              <option value="">{form.brandId ? "Pilih Sub Brand" : "Pilih Brand dulu"}</option>
+              {filteredSub.map(sb => <option key={sb.id} value={sb.id}>{sb.name}</option>)}
             </select>
+            <Err msg={errors.subBrandId} />
           </div>
 
-          {/* Product */}
           <div>
-            <label style={labelStyle}>Product</label>
+            <label style={ls}>Product <span style={{color:"#ef4444"}}>*</span></label>
             <SearchableDropdown
-              options={filteredProducts.map(p => ({ value: p.id, label: p.name }))}
-              value={form.productId}
-              onChange={val => setForm(prev => ({ ...prev, productId: val }))}
-              placeholder="Pilih Product"
+              options={filteredProd.map(p => ({ value: p.id, label: p.name }))}
+              value={form.productId} onChange={val => set('productId', val)}
+              placeholder={form.subBrandId ? "Pilih Product" : "Pilih Sub Brand dulu"}
+              disabled={!form.subBrandId} hasError={!!errors.productId}
             />
+            <Err msg={errors.productId} />
           </div>
 
-          {/* Qty Order */}
           <div>
-            <label style={labelStyle}>Qty Order (Karton)</label>
-            <input type="number" name="qtyOrder" value={form.qtyOrder} onChange={handleChange} placeholder="0" style={inputStyle} min="0" />
+            <label style={ls}>Qty Order (Karton) <span style={{color:"#ef4444"}}>*</span></label>
+            <input type="number" value={form.qtyOrder} onChange={e => set('qtyOrder', e.target.value)} placeholder="0" style={ic(errors.qtyOrder)} min="1" />
+            <Err msg={errors.qtyOrder} />
           </div>
 
-          {/* Tanggal Keluar Pabrik & ETA */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={labelStyle}>Tgl Keluar Pabrik</label>
-              <input type="date" name="tanggalKeluarPabrik" value={form.tanggalKeluarPabrik} onChange={handleChange} style={inputStyle} />
+              <label style={ls}>Tgl Keluar Pabrik</label>
+              <input type="date" value={form.tanggalKeluarPabrik} onChange={e => set('tanggalKeluarPabrik', e.target.value)} style={ic(errors.tanggalKeluarPabrik)} />
+              <Err msg={errors.tanggalKeluarPabrik} />
             </div>
             <div>
-              <label style={labelStyle}>ETA</label>
-              <input type="date" name="eta" value={form.eta} onChange={handleChange} style={inputStyle} />
+              <label style={ls}>ETA <span style={{color:"#ef4444"}}>*</span></label>
+              <input type="date" value={form.eta} onChange={e => set('eta', e.target.value)} style={ic(errors.eta)} />
+              <Err msg={errors.eta} />
             </div>
           </div>
 
-          {/* Status */}
           <div>
-            <label style={labelStyle}>Status</label>
-            <select name="status" value={form.status} onChange={handleChange} style={{ ...inputStyle, appearance: "none" }}>
+            <label style={ls}>Status</label>
+            <select value={form.status} onChange={e => set('status', e.target.value)} style={{ ...ic(errors.status), appearance: "none" }}>
               {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Notes */}
           <div>
-            <label style={labelStyle}>Notes</label>
-            <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Catatan tambahan..." rows={3}
-              style={{ ...inputStyle, resize: "vertical" }} />
+            <label style={ls}>Notes</label>
+            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Catatan tambahan..." rows={3} style={{ ...ic(false), resize: "vertical" }} />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-semibold"
-              style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>Batal</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-              style={{ background: "#2563eb" }}>
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-semibold" style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>Batal</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background: "#2563eb" }}>
               {loading ? "Menyimpan..." : editData ? "Update" : "Simpan"}
             </button>
           </div>
@@ -144,5 +136,4 @@ function FormLeadtime({ isOpen, onClose, onSubmit, onError = () => {}, editData,
     </div>
   );
 }
-
 export default FormLeadtime;

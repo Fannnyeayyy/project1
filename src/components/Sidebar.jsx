@@ -48,7 +48,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           return (
             <div key={section} className="mb-2">
               {sidebarOpen && (
-                <div className="text-[10px] font-semibold uppercase tracking-widest px-2 py-2" style={{ color: "#475569" }}>
+                <div className="text-[10px] font-semibold uppercase tracking-widest px-2 py-2" style={{ color: "#e2e8f0" }}>
                   {section}
                 </div>
               )}

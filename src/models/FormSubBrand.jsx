@@ -1,120 +1,64 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
+import { useFormValidation, v } from "../hooks/useFormValidation";
 
-function FormSubBrand({ isOpen, onClose, onSubmit, brands, editData, onError = () => {} }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    brandId: ""
-  });
+const RULES = {
+  name:    v.required('Nama sub brand'),
+  brandId: v.positiveInt('Brand'),
+};
+const ic = (err) => ({ border: `1px solid ${err ? '#ef4444' : '#e2e8f0'}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: "#1e293b", width: "100%", outline: "none", background: "white" });
+const ls = { fontSize: 12, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" };
+const Err = ({ msg }) => msg ? <span className="flex items-center gap-1 mt-1 text-xs" style={{ color: "#ef4444" }}><AlertCircle size={11} />{msg}</span> : null;
+const EMPTY = { name: "", brandId: "" };
+
+function FormSubBrand({ isOpen, onClose, onSubmit, brands = [], editData, onError = () => {} }) {
+  const [form, setForm] = useState(EMPTY);
+  const [loading, setLoading] = useState(false);
+  const { errors, validate, clearError } = useFormValidation(RULES);
 
   useEffect(() => {
-    if (editData) {
-      setFormData({
-        name: editData.name,
-        brandId: editData.brandId
-      });
-    } else {
-      setFormData({
-        name: "",
-        brandId: ""
-      });
-    }
+    setForm(editData ? { name: editData.name ?? "", brandId: editData.brandId ?? "" } : EMPTY);
   }, [editData, isOpen]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
+  const set = (name, value) => { setForm(prev => ({ ...prev, [name]: value })); clearError(name); };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.name.trim()) {
-      onError("Sub Brand name is required");
-      return;
-    }
-
-    if (!formData.brandId) {
-      onError("Pilih brand terlebih dahulu");
-      return;
-    }
-
-    onSubmit(formData, editData?.id);
-    setFormData({ name: "", brandId: "" });
+    if (!validate(form)) return;
+    setLoading(true);
+    await onSubmit({ name: form.name, brandId: parseInt(form.brandId) }, editData?.id);
+    setLoading(false);
   };
 
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {editData ? "Edit Sub Brand" : "Add New Sub Brand"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition"
-          >
-            <X size={24} />
-          </button>
+    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(0,0,0,0.5)" }}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ border: "1px solid #e2e8f0" }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <span className="text-sm font-bold" style={{ color: "#1e293b" }}>{editData ? "Edit Sub Brand" : "Tambah Sub Brand"}</span>
+          <button onClick={onClose} style={{ color: "#94a3b8" }}><X size={18} /></button>
         </div>
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Sub Brand Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sub Brand Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter sub brand name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
+            <label style={ls}>Nama Sub Brand <span style={{color:"#ef4444"}}>*</span></label>
+            <input type="text" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Masukkan nama sub brand" style={ic(errors.name)} />
+            <Err msg={errors.name} />
           </div>
 
-          {/* Brand Select */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand
-            </label>
-            <select
-              name="brandId"
-              value={formData.brandId}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select a brand</option>
-              {brands && brands.map((brand) => (
-                <option key={brand.id} value={brand.id}>
-                  {brand.name}
-                </option>
-              ))}
+            <label style={ls}>Brand <span style={{color:"#ef4444"}}>*</span></label>
+            <select value={form.brandId} onChange={e => set('brandId', e.target.value)} style={{ ...ic(errors.brandId), appearance: "none" }}>
+              <option value="">Pilih Brand</option>
+              {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
+            <Err msg={errors.brandId} />
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition"
-            >
-              {editData ? "Update" : "Add"}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm font-semibold" style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0" }}>Batal</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background: "#2563eb" }}>
+              {loading ? "Menyimpan..." : editData ? "Update" : "Simpan"}
             </button>
           </div>
         </form>
@@ -122,5 +66,4 @@ function FormSubBrand({ isOpen, onClose, onSubmit, brands, editData, onError = (
     </div>
   );
 }
-
 export default FormSubBrand;
